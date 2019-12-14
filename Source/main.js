@@ -188,7 +188,7 @@ function main()
 	var mapTerrains = 
 	[
 		new MapTerrain("Open", ".", 1, "White"),
-		new MapTerrain("Blocked", "x", 100, "LightGray"),
+		new MapTerrain("Blocked", "x", 100, "Gray"),
 	];
  
 	var map = new Map
@@ -211,8 +211,8 @@ function main()
  
 	var factions = 
 	[
-		new Faction("Green", "LightGreen"),
-		new Faction("Red", "Pink"),
+		new Faction("Green", "Green"),
+		new Faction("Red", "Red"),
 	];
  
 	var world = new World

@@ -5,8 +5,8 @@ function Display(viewSize)
  
 	this.fontHeight = 10;
 	this.colorBack = "White";
-	this.colorFore = "LightGray";
-	this.colorHighlight = "Gray";
+	this.colorFore = "Gray";
+	this.colorHighlight = "Black";
  
 	// temporary variables
  
