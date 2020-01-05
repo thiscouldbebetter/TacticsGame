@@ -8,7 +8,7 @@ function main()
 		if (targetPos == null)
 		{
 			var moverOrientation = moverActive.orientation;
-	 
+
 			if (moverOrientation.equals(direction) == true)
 			{
 				var moverPosNext = moverActive.pos.clone().add
@@ -18,7 +18,7 @@ function main()
 				(
 					world.map.sizeInCellsMinusOnes
 				);
-				
+
 				var terrain = world.map.terrainAtPos(moverPosNext);
 				var movePointsToTraverse = terrain.movePointsToTraverse;
 				if (moverActive.movePoints >= movePointsToTraverse)
@@ -28,12 +28,12 @@ function main()
 						moverActive.pos.overwriteWith
 						(
 							moverPosNext
-						);  
+						);
 						moverActive.movePoints -= movePointsToTraverse;
 					}
 				}
 			}
-	 
+
 			moverOrientation.overwriteWith
 			(
 				direction
@@ -48,26 +48,26 @@ function main()
 			(
 				world.map.sizeInCellsMinusOnes
 			);
-			
+
 			var targetDisplacementNext = targetPosNext.clone().subtract
 			(
 				moverActive.pos
 			);
-			
+
 			var targetDistanceNext = targetDisplacementNext.magnitude();
 			if (targetDistanceNext <= moverActive.defn().attackRange)
 			{
 				targetPos.overwriteWith(targetPosNext)
 			}
 		}
-	}
- 
-	var actions = 
+	};
+
+	var actions =
 	[
 		new Action
 		(
 			"Attack",
-			"F", // keyCode
+			"f", // keyCode
 			function perform()
 			{
 				var world = Globals.Instance.world;
@@ -85,22 +85,22 @@ function main()
 					(
 						moverActive.targetPos
 					);
-				 
+
 					if (moverTarget != null)
 					{
 						moverTarget.integrity -= moverActive.defn().attackDamage;
 					}
-	 
+
 					moverActive.movePoints = 0;
-					
+
 					moverActive.targetPos = null;
 				}
 			}
-		),		
+		),
 		new Action
 		(
 			"Down",
-			"S", // keyCode
+			"s", // keyCode
 			function perform()
 			{
 				actionMovePerform(new Coords(0, 1));
@@ -109,7 +109,7 @@ function main()
 		new Action
 		(
 			"Left",
-			"A", // keyCode
+			"a", // keyCode
 			function perform()
 			{
 				actionMovePerform(new Coords(-1, 0));
@@ -118,7 +118,7 @@ function main()
 		new Action
 		(
 			"Right",
-			"D", // keyCode
+			"d", // keyCode
 			function perform()
 			{
 				actionMovePerform(new Coords(1, 0));
@@ -127,7 +127,7 @@ function main()
 		new Action
 		(
 			"Up",
-			"W", // keyCode
+			"w", // keyCode
 			function perform()
 			{
 				actionMovePerform(new Coords(0, -1));
@@ -136,61 +136,61 @@ function main()
 		new Action
 		(
 			"Pass",
-			"P", // keyCode
+			"p", // keyCode
 			function perform()
 			{
 				var world = Globals.Instance.world;
 				var moverActive = world.moverActive();
- 
+
 				moverActive.movePoints = 0;
 			}
 		),
 	];
- 
+
 	var actionNamesStandard = [ "Attack", "Up", "Down", "Left", "Right", "Pass" ];
- 
-	var moverDefns = 
+
+	var moverDefns =
 	[
 		new MoverDefn
 		(
-			"Slugger", 
-			"A", 
+			"Slugger",
+			"A",
 			3, // integrityMax
 			1, // movePointsPerTurn
 			1, // attackRange
 			2, // attackDamage
 			actionNamesStandard
 		),
- 
+
 		new MoverDefn
 		(
-			"Sniper", 
-			"B",  
+			"Sniper",
+			"B",
 			2, // integrityMax
 			1, // movePointsPerTurn
 			3, // attackRange
 			1, // attackDamage
 			actionNamesStandard
 		),
-		
+
 		new MoverDefn
 		(
-			"Sprinter", 
-			"C", 
+			"Sprinter",
+			"C",
 			1, // integrityMax
 			3, // movePointsPerTurn
 			1, // attackRange
 			1, // attackDamage
 			actionNamesStandard
-		),		
+		),
 	];
- 
-	var mapTerrains = 
+
+	var mapTerrains =
 	[
-		new MapTerrain("Open", ".", 1, "White"),
+		new MapTerrain("Open", ".", 1, "Green"),
 		new MapTerrain("Blocked", "x", 100, "Gray"),
 	];
- 
+
 	var map = new Map
 	(
 		new Coords(20, 20), // cellSizeInPixels
@@ -208,13 +208,13 @@ function main()
 			"........",
 		]
 	);
- 
-	var factions = 
+
+	var factions =
 	[
-		new Faction("Green", "Green"),
+		new Faction("Blue", "Blue"),
 		new Faction("Red", "Red"),
 	];
- 
+
 	var world = new World
 	(
 		actions,
@@ -226,35 +226,27 @@ function main()
 			new Mover
 			(
 				"Slugger", // defnName
-				"Green", // faction
+				"Blue", // faction
 				new Coords(1, 0), // orientation
 				new Coords(1, 1) // pos
 			),
- 
+
 			new Mover
 			(
 				"Sniper", // defnName
-				"Red", // faction
+				"Blue", // faction
 				new Coords(1, 0), // orientation
 				new Coords(3, 1) // pos
 			),
-			
+
 			new Mover
 			(
 				"Sprinter", // defnName
-				"Red", // faction
+				"Blue", // faction
 				new Coords(1, 0), // orientation
 				new Coords(1, 3) // pos
 			),
-			 
-			new Mover
-			(
-				"Sniper", // defnName
-				"Green", // faction
-				new Coords(1, 0), // orientation
-				new Coords(3, 3) // pos
-			),
- 
+
 			new Mover
 			(
 				"Slugger", // defnName
@@ -262,20 +254,34 @@ function main()
 				new Coords(1, 0), // orientation
 				new Coords(5, 3) // pos
 			),
-			
+
+			new Mover
+			(
+				"Sniper", // defnName
+				"Red", // faction
+				new Coords(1, 0), // orientation
+				new Coords(3, 3) // pos
+			),
+
 			new Mover
 			(
 				"Sprinter", // defnName
-				"Green", // faction
+				"Red", // faction
 				new Coords(1, 0), // orientation
 				new Coords(5, 1) // pos
-			),			
+			),
 		]
 	);
- 
+
 	Globals.Instance.initialize
 	(
-		new Display(new Coords(300, 200)),
+		new Display
+		(
+			[new Coords(300, 200)],
+			null, null, // font
+			"Gray",
+			"White"
+		),
 		world
 	);
 }

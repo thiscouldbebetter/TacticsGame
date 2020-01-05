@@ -1,4 +1,4 @@
- 
+
 function Faction(name, color)
 {
 	this.name = name;

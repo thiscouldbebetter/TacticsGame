@@ -1,10 +1,10 @@
- 
+
 // classes
- 
-function Action(name, keyCode, perform)
+
+function Action(name, key, perform)
 {
 	this.name = name;
-	this.keyCode = keyCode;
+	this.key = key;
 	this.perform = perform;
 }
 
@@ -14,12 +14,13 @@ function Action(name, keyCode, perform)
 		var returnValue = new ControlButton
 		(
 			"button" + this.name, // name
-			this.name + " (" + this.keyCode + ")", // text
-			new Coords(50, 12), // size
 			new Coords(), // pos
+			new Coords(50, 12), // size
+			this.name + " (" + this.key + ")", // text
+			10, true, true, // fontHeight, hasBorder, isEnabled
 			this.perform.bind(this)
 		);
- 
+
 		return returnValue;
-	}
+	};
 }

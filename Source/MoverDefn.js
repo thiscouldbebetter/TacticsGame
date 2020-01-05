@@ -1,4 +1,4 @@
- 
+
 function MoverDefn
 (
 	name,
@@ -23,16 +23,16 @@ function MoverDefn
 	MoverDefn.prototype.actionsAvailable = function()
 	{
 		var returnValues = [];
- 
+
 		var actionsAll = Globals.Instance.world.actions;
- 
+
 		for (var i = 0; i < this.actionNamesAvailable.length; i++)
 		{
 			var actionName = this.actionNamesAvailable[i];
 			var action = actionsAll[actionName];
 			returnValues.push(action);
 		}
- 
+
 		return returnValues;
-	}
+	};
 }
