@@ -1,30 +1,31 @@
 
-function MoverDefn
-(
-	name,
-	codeChar,
-	integrityMax,
-	movePointsPerTurn,
-	attackRange,
-	attackDamage,
-	actionNamesAvailable
-)
+class MoverDefn
 {
-	this.name = name;
-	this.codeChar = codeChar;
-	this.integrityMax = integrityMax;
-	this.movePointsPerTurn = movePointsPerTurn;
-	this.attackRange = attackRange;
-	this.attackDamage = attackDamage;
-	this.actionNamesAvailable = actionNamesAvailable;
-}
+	constructor
+	(
+		name,
+		codeChar,
+		integrityMax,
+		movePointsPerTurn,
+		attackRange,
+		attackDamage,
+		actionNamesAvailable
+	)
+	{
+		this.name = name;
+		this.codeChar = codeChar;
+		this.integrityMax = integrityMax;
+		this.movePointsPerTurn = movePointsPerTurn;
+		this.attackRange = attackRange;
+		this.attackDamage = attackDamage;
+		this.actionNamesAvailable = actionNamesAvailable;
+	}
 
-{
-	MoverDefn.prototype.actionsAvailable = function()
+	actionsAvailable(world)
 	{
 		var returnValues = [];
 
-		var actionsAll = Globals.Instance.world.actions;
+		var actionsAll = world.actions;
 
 		for (var i = 0; i < this.actionNamesAvailable.length; i++)
 		{
@@ -34,5 +35,5 @@ function MoverDefn
 		}
 
 		return returnValues;
-	};
+	}
 }

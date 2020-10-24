@@ -1,0 +1,4 @@
+WASD keys to move.
+F key to attack.
+P to pass.
+Escape for menu.

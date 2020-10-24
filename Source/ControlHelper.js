@@ -1,11 +1,7 @@
 
-function ControlHelper()
+class ControlHelper
 {
-	// static class
-}
-
-{
-	ControlHelper.toControlsMany = function
+	static toControlsMany
 	(
 		controllables, posOfFirst, spacing
 	)
@@ -33,5 +29,5 @@ function ControlHelper()
 		}
 
 		return returnValues;
-	};
+	}
 }

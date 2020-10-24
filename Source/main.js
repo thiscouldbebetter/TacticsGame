@@ -1,287 +1,80 @@
 function main()
 {
-	var actionMovePerform = function(direction)
-	{
-		var world = Globals.Instance.world;
-		var moverActive = world.moverActive();
-		var targetPos = moverActive.targetPos;
-		if (targetPos == null)
-		{
-			var moverOrientation = moverActive.orientation;
+	// It may be necessary to clear local storage to prevent errors on
+	// deserialization of existing saved items after the schema changes.
+	// localStorage.clear();
 
-			if (moverOrientation.equals(direction) == true)
-			{
-				var moverPosNext = moverActive.pos.clone().add
-				(
-					direction
-				).trimToRangeMax
-				(
-					world.map.sizeInCellsMinusOnes
-				);
+	var mediaFilePaths = mediaFilePathsBuild();
 
-				var terrain = world.map.terrainAtPos(moverPosNext);
-				var movePointsToTraverse = terrain.movePointsToTraverse;
-				if (moverActive.movePoints >= movePointsToTraverse)
-				{
-					if (world.moverAtPos(moverPosNext) == null)
-					{
-						moverActive.pos.overwriteWith
-						(
-							moverPosNext
-						);
-						moverActive.movePoints -= movePointsToTraverse;
-					}
-				}
-			}
+	var mediaLibrary = MediaLibrary.fromFilePaths(mediaFilePaths);
 
-			moverOrientation.overwriteWith
-			(
-				direction
-			);
-		}
-		else
-		{
-			var targetPosNext = targetPos.clone().add
-			(
-				direction
-			).trimToRangeMax
-			(
-				world.map.sizeInCellsMinusOnes
-			);
-
-			var targetDisplacementNext = targetPosNext.clone().subtract
-			(
-				moverActive.pos
-			);
-
-			var targetDistanceNext = targetDisplacementNext.magnitude();
-			if (targetDistanceNext <= moverActive.defn().attackRange)
-			{
-				targetPos.overwriteWith(targetPosNext)
-			}
-		}
-	};
-
-	var actions =
+	var displaySizesAvailable =
 	[
-		new Action
-		(
-			"Attack",
-			"f", // keyCode
-			function perform()
-			{
-				var world = Globals.Instance.world;
-				var moverActive = world.moverActive();
-				if (moverActive.targetPos == null)
-				{
-					moverActive.targetPos = moverActive.pos.clone().add
-					(
-						moverActive.orientation
-					);
-				}
-				else
-				{
-					var moverTarget = world.moverAtPos
-					(
-						moverActive.targetPos
-					);
-
-					if (moverTarget != null)
-					{
-						moverTarget.integrity -= moverActive.defn().attackDamage;
-					}
-
-					moverActive.movePoints = 0;
-
-					moverActive.targetPos = null;
-				}
-			}
-		),
-		new Action
-		(
-			"Down",
-			"s", // keyCode
-			function perform()
-			{
-				actionMovePerform(new Coords(0, 1));
-			}
-		),
-		new Action
-		(
-			"Left",
-			"a", // keyCode
-			function perform()
-			{
-				actionMovePerform(new Coords(-1, 0));
-			}
-		),
-		new Action
-		(
-			"Right",
-			"d", // keyCode
-			function perform()
-			{
-				actionMovePerform(new Coords(1, 0));
-			}
-		),
-		new Action
-		(
-			"Up",
-			"w", // keyCode
-			function perform()
-			{
-				actionMovePerform(new Coords(0, -1));
-			}
-		),
-		new Action
-		(
-			"Pass",
-			"p", // keyCode
-			function perform()
-			{
-				var world = Globals.Instance.world;
-				var moverActive = world.moverActive();
-
-				moverActive.movePoints = 0;
-			}
-		),
+		new Coords(400, 300, 1),
+		new Coords(640, 480, 1),
+		new Coords(800, 600, 1),
+		new Coords(1200, 900, 1),
+		// Wrap.
+		new Coords(200, 150, 1),
 	];
 
-	var actionNamesStandard = [ "Attack", "Up", "Down", "Left", "Right", "Pass" ];
-
-	var moverDefns =
-	[
-		new MoverDefn
-		(
-			"Slugger",
-			"A",
-			3, // integrityMax
-			1, // movePointsPerTurn
-			1, // attackRange
-			2, // attackDamage
-			actionNamesStandard
-		),
-
-		new MoverDefn
-		(
-			"Sniper",
-			"B",
-			2, // integrityMax
-			1, // movePointsPerTurn
-			3, // attackRange
-			1, // attackDamage
-			actionNamesStandard
-		),
-
-		new MoverDefn
-		(
-			"Sprinter",
-			"C",
-			1, // integrityMax
-			3, // movePointsPerTurn
-			1, // attackRange
-			1, // attackDamage
-			actionNamesStandard
-		),
-	];
-
-	var mapTerrains =
-	[
-		new MapTerrain("Open", ".", 1, "Green"),
-		new MapTerrain("Blocked", "x", 100, "Gray"),
-	];
-
-	var map = new Map
+	var display = new Display2D
 	(
-		new Coords(20, 20), // cellSizeInPixels
-		new Coords(20, 20), // pos
-		mapTerrains,
-		// cellsAsStrings
-		[
-			"........",
-			"....x...",
-			"....x...",
-			"....x...",
-			"........",
-			"...xxx..",
-			"........",
-			"........",
-		]
+		displaySizesAvailable,
+		"Font", // fontName
+		10, // fontHeightInPixels
+		"Gray", "White", // colorFore, colorBack
+		null
 	);
 
-	var factions =
+	var timerHelper = new TimerHelper(20);
+
+	var controlStyle = ControlStyle.Instances().Default;
+
+	var universe = Universe.create
+	(
+		"Tactics Game",
+		"0.0.0-20201024-1530", // version
+		timerHelper,
+		display,
+		mediaLibrary,
+		controlStyle,
+		null
+	);
+	universe.initialize
+	(
+		() => { universe.start(); }
+	);
+}
+
+function mediaFilePathsBuild()
+{
+	var contentDirectoryPath = "../Content/";
+
+	var fontDirectoryPath = contentDirectoryPath + "Fonts/";
+	var imageDirectoryPath = contentDirectoryPath + "Images/";
+	var soundEffectDirectoryPath = contentDirectoryPath + "Audio/Effects/";
+	var soundMusicDirectoryPath = contentDirectoryPath + "Audio/Music/";
+	var textStringDirectoryPath = contentDirectoryPath + "Text/";
+	var videoDirectoryPath = contentDirectoryPath + "Video/";
+
+	var mediaFilePaths =
 	[
-		new Faction("Blue", "Blue"),
-		new Faction("Red", "Red"),
+		imageDirectoryPath + "Opening.png",
+		imageDirectoryPath + "Title.png",
+
+		soundEffectDirectoryPath + "Sound.wav",
+		soundEffectDirectoryPath + "Clang.wav",
+
+		soundMusicDirectoryPath + "Music.mp3",
+		soundMusicDirectoryPath + "Title.mp3",
+
+		videoDirectoryPath + "Movie.webm",
+
+		fontDirectoryPath + "Font.ttf",
+
+		textStringDirectoryPath + "Instructions.txt",
 	];
 
-	var world = new World
-	(
-		actions,
-		moverDefns,
-		map,
-		factions,
-		// movers
-		[
-			new Mover
-			(
-				"Slugger", // defnName
-				"Blue", // faction
-				new Coords(1, 0), // orientation
-				new Coords(1, 1) // pos
-			),
-
-			new Mover
-			(
-				"Sniper", // defnName
-				"Blue", // faction
-				new Coords(1, 0), // orientation
-				new Coords(3, 1) // pos
-			),
-
-			new Mover
-			(
-				"Sprinter", // defnName
-				"Blue", // faction
-				new Coords(1, 0), // orientation
-				new Coords(1, 3) // pos
-			),
-
-			new Mover
-			(
-				"Slugger", // defnName
-				"Red", // faction
-				new Coords(1, 0), // orientation
-				new Coords(5, 3) // pos
-			),
-
-			new Mover
-			(
-				"Sniper", // defnName
-				"Red", // faction
-				new Coords(1, 0), // orientation
-				new Coords(3, 3) // pos
-			),
-
-			new Mover
-			(
-				"Sprinter", // defnName
-				"Red", // faction
-				new Coords(1, 0), // orientation
-				new Coords(5, 1) // pos
-			),
-		]
-	);
-
-	Globals.Instance.initialize
-	(
-		new Display
-		(
-			[new Coords(300, 200)],
-			null, null, // font
-			"Gray",
-			"White"
-		),
-		world
-	);
+	return mediaFilePaths;
 }

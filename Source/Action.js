@@ -1,15 +1,14 @@
 
-// classes
-
-function Action(name, key, perform)
+class Action2
 {
-	this.name = name;
-	this.key = key;
-	this.perform = perform;
-}
+	constructor(name, key, perform)
+	{
+		this.name = name;
+		this.key = key;
+		this.perform = perform;
+	}
 
-{
-	Action.prototype.toControl = function()
+	toControl()
 	{
 		var returnValue = new ControlButton
 		(
@@ -22,5 +21,5 @@ function Action(name, key, perform)
 		);
 
 		return returnValue;
-	};
+	}
 }

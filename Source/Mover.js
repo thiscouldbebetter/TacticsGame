@@ -1,41 +1,42 @@
 
-function Mover(defnName, factionName, orientation, pos)
+class Mover
 {
-	this.defnName = defnName;
-	this.factionName = factionName;
-	this.orientation = orientation;
-	this.pos = pos;
-}
-
-{
-	Mover.prototype.defn = function()
+	constructor(defnName, factionName, orientation, pos)
 	{
-		return Globals.Instance.world.moverDefns[this.defnName];
-	};
+		this.defnName = defnName;
+		this.factionName = factionName;
+		this.orientation = orientation;
+		this.pos = pos;
+	}
 
-	Mover.prototype.faction = function()
+	defn(world)
 	{
-		return Globals.Instance.world.factions[this.factionName];
-	};
+		return world.moverDefns[this.defnName];
+	}
 
-	Mover.prototype.name = function()
+	faction(world)
+	{
+		return world.factions[this.factionName];
+	}
+
+	name()
 	{
 		return this.factionName + " " + this.defnName;
-	};
+	}
 
-	Mover.prototype.initialize = function()
+	initialize(universe, world)
 	{
-		var defn = this.defn();
+		var defn = this.defn(world);
 		this.integrity = defn.integrityMax;
 		this.movePoints = defn.movePointsPerTurn;
-	};
+	}
 
 	// drawable
 
-	Mover.prototype.draw = function(display, map, isMoverActive)
+	draw(universe, world, display, map, isMoverActive)
 	{
 		var mover = this;
-		var moverDefn = mover.defn();
+		var moverDefn = mover.defn(world);
 
 		var mapCellSizeInPixels = map.cellSizeInPixels;
 		var mapCellSizeInPixelsHalf = map.cellSizeInPixelsHalf;
@@ -66,7 +67,7 @@ function Mover(defnName, factionName, orientation, pos)
 		(
 			drawPos,
 			radius,
-			mover.faction().color,
+			mover.faction(world).color,
 			colorStroke
 		);
 
@@ -112,5 +113,5 @@ function Mover(defnName, factionName, orientation, pos)
 				display.drawCircle(drawPos, radius / 2, colorStroke, "Red");
 			}
 		}
-	};
+	}
 }

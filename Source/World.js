@@ -1,20 +1,304 @@
 
-function World(actions, moverDefns, map, factions, movers)
+class World
 {
-	this.actions = actions;
-	this.moverDefns = moverDefns;
-	this.map = map;
-	this.movers = movers;
-	this.factions = factions;
+	constructor(actions, moverDefns, map, factions, movers)
+	{
+		this.actions = actions;
+		this.moverDefns = moverDefns;
+		this.map = map;
+		this.movers = movers;
+		this.factions = factions;
 
-	this.actions.addLookupsByName();
-	this.factions.addLookupsByName();
-	this.moverDefns.addLookupsByName();
+		this.actions.addLookupsByName();
+		this.factions.addLookupsByName();
+		this.moverDefns.addLookupsByName();
 
-	this.moversToRemove = [];
-}
-{
-	World.prototype.moverActive = function()
+		this.moversToRemove = [];
+	}
+
+	static create()
+	{
+		var actionMovePerform = (universe, world, direction) =>
+		{
+			var moverActive = world.moverActive();
+			var targetPos = moverActive.targetPos;
+			if (targetPos == null)
+			{
+				var moverOrientation = moverActive.orientation;
+
+				if (moverOrientation.equals(direction) == true)
+				{
+					var moverPosNext = moverActive.pos.clone().add
+					(
+						direction
+					).trimToRangeMax
+					(
+						world.map.sizeInCellsMinusOnes
+					);
+
+					var terrain = world.map.terrainAtPos(moverPosNext);
+					var movePointsToTraverse = terrain.movePointsToTraverse;
+					if (moverActive.movePoints >= movePointsToTraverse)
+					{
+						if (world.moverAtPos(moverPosNext) == null)
+						{
+							moverActive.pos.overwriteWith
+							(
+								moverPosNext
+							);
+							moverActive.movePoints -= movePointsToTraverse;
+						}
+					}
+				}
+
+				moverOrientation.overwriteWith
+				(
+					direction
+				);
+			}
+			else
+			{
+				var targetPosNext = targetPos.clone().add
+				(
+					direction
+				).trimToRangeMax
+				(
+					world.map.sizeInCellsMinusOnes
+				);
+
+				var targetDisplacementNext = targetPosNext.clone().subtract
+				(
+					moverActive.pos
+				);
+
+				var targetDistanceNext = targetDisplacementNext.magnitude();
+				if (targetDistanceNext <= moverActive.defn(world).attackRange)
+				{
+					targetPos.overwriteWith(targetPosNext)
+				}
+			}
+		};
+
+		var actions =
+		[
+			new Action2
+			(
+				"Attack",
+				"f", // keyCode
+				(universe, world) => // perform
+				{
+					var moverActive = world.moverActive();
+					if (moverActive.movePoints <= 0)
+					{
+						return; // hack
+					}
+
+					if (moverActive.targetPos == null)
+					{
+						moverActive.targetPos = moverActive.pos.clone().add
+						(
+							moverActive.orientation
+						);
+					}
+					else
+					{
+						var moverTarget = world.moverAtPos
+						(
+							moverActive.targetPos
+						);
+
+						if (moverTarget != null)
+						{
+							moverTarget.integrity -= moverActive.defn(world).attackDamage;
+						}
+
+						moverActive.movePoints = 0;
+
+						moverActive.targetPos = null;
+					}
+				}
+			),
+			new Action2
+			(
+				"Down",
+				"s", // keyCode
+				(universe, world) => // perform
+				{
+					actionMovePerform(universe, world, new Coords(0, 1));
+				}
+			),
+			new Action2
+			(
+				"Left",
+				"a", // keyCode
+				(universe, world) => // perform
+				{
+					actionMovePerform(universe, world, new Coords(-1, 0));
+				}
+			),
+			new Action2
+			(
+				"Right",
+				"d", // keyCode
+				(universe, world) => // perform
+				{
+					actionMovePerform(universe, world, new Coords(1, 0));
+				}
+			),
+			new Action2
+			(
+				"Up",
+				"w", // keyCode
+				(universe, world) => // perform
+				{
+					actionMovePerform(universe, world, new Coords(0, -1));
+				}
+			),
+			new Action2
+			(
+				"Pass",
+				"p", // keyCode
+				(universe, world) => // perform
+				{
+					var moverActive = world.moverActive();
+
+					moverActive.movePoints = 0;
+				}
+			),
+		];
+
+		var actionNamesStandard = [ "Attack", "Up", "Down", "Left", "Right", "Pass" ];
+
+		var moverDefns =
+		[
+			new MoverDefn
+			(
+				"Slugger",
+				"A",
+				3, // integrityMax
+				1, // movePointsPerTurn
+				1, // attackRange
+				2, // attackDamage
+				actionNamesStandard
+			),
+
+			new MoverDefn
+			(
+				"Sniper",
+				"B",
+				2, // integrityMax
+				1, // movePointsPerTurn
+				3, // attackRange
+				1, // attackDamage
+				actionNamesStandard
+			),
+
+			new MoverDefn
+			(
+				"Sprinter",
+				"C",
+				1, // integrityMax
+				3, // movePointsPerTurn
+				1, // attackRange
+				1, // attackDamage
+				actionNamesStandard
+			),
+		];
+
+		var mapTerrains =
+		[
+			new MapTerrain("Open", ".", 1, "Green"),
+			new MapTerrain("Blocked", "x", 100, "Gray"),
+		];
+
+		var map = new MapOfTerrain
+		(
+			new Coords(20, 20), // cellSizeInPixels
+			new Coords(20, 20), // pos
+			mapTerrains,
+			// cellsAsStrings
+			[
+				"........",
+				"....x...",
+				"....x...",
+				"....x...",
+				"........",
+				"...xxx..",
+				"........",
+				"........",
+			]
+		);
+
+		var factions =
+		[
+			new Faction("Blue", "Blue"),
+			new Faction("Red", "Red"),
+		];
+
+		var movers =
+		[
+			new Mover
+			(
+				"Slugger", // defnName
+				"Blue", // faction
+				new Coords(1, 0), // orientation
+				new Coords(1, 1) // pos
+			),
+
+			new Mover
+			(
+				"Sniper", // defnName
+				"Blue", // faction
+				new Coords(1, 0), // orientation
+				new Coords(3, 1) // pos
+			),
+
+			new Mover
+			(
+				"Sprinter", // defnName
+				"Blue", // faction
+				new Coords(1, 0), // orientation
+				new Coords(1, 3) // pos
+			),
+
+			new Mover
+			(
+				"Slugger", // defnName
+				"Red", // faction
+				new Coords(1, 0), // orientation
+				new Coords(5, 3) // pos
+			),
+
+			new Mover
+			(
+				"Sniper", // defnName
+				"Red", // faction
+				new Coords(1, 0), // orientation
+				new Coords(3, 3) // pos
+			),
+
+			new Mover
+			(
+				"Sprinter", // defnName
+				"Red", // faction
+				new Coords(1, 0), // orientation
+				new Coords(5, 1) // pos
+			),
+		];
+
+		var world = new World
+		(
+			actions,
+			moverDefns,
+			map,
+			factions,
+			movers
+		);
+
+		return world;
+	}
+
+	moverActive()
 	{
 		var returnValue = null;
 
@@ -24,9 +308,9 @@ function World(actions, moverDefns, map, factions, movers)
 		}
 
 		return returnValue;
-	};
+	}
 
-	World.prototype.moverActiveAdvanceIfNeeded = function()
+	moverActiveAdvanceIfNeeded()
 	{
 		var moverActive = this.moverActive();
 
@@ -49,9 +333,9 @@ function World(actions, moverDefns, map, factions, movers)
 		}
 
 		return moverActive;
-	};
+	}
 
-	World.prototype.moverAtPos = function(posToCheck)
+	moverAtPos(posToCheck)
 	{
 		var returnValue = null;
 
@@ -66,26 +350,28 @@ function World(actions, moverDefns, map, factions, movers)
 		}
 
 		return returnValue;
-	};
+	}
 
-	World.prototype.moversReplenish = function()
+	moversReplenish()
 	{
 		for (var i = 0; i < this.movers.length; i++)
 		{
 			var mover = this.movers[i];
-			mover.movePoints = mover.defn().movePointsPerTurn;
+			mover.movePoints = mover.defn(this).movePointsPerTurn;
 		}
-	};
+	}
 
-	World.prototype.initialize = function()
+	initialize(universe)
 	{
+		var world = this;
+
 		for (var i = 0; i < this.movers.length; i++)
 		{
 			var mover = this.movers[i];
-			mover.initialize();
+			mover.initialize(universe, world);
 		}
 
-		var moverActive = this.moverActiveAdvanceIfNeeded();
+		var moverActive = this.moverActiveAdvanceIfNeeded(universe, world);
 
 		this.containerMain = new ControlContainer
 		(
@@ -101,7 +387,7 @@ function World(actions, moverDefns, map, factions, movers)
 					// children
 					ControlHelper.toControlsMany
 					(
-						moverActive.defn().actionsAvailable(),
+						moverActive.defn(world).actionsAvailable(world),
 						new Coords(10, 10), // posFirst
 						new Coords(0, 12) // spacing
 					)
@@ -119,7 +405,7 @@ function World(actions, moverDefns, map, factions, movers)
 							new Coords(5, 5), // pos
 							new DataBinding
 							(
-								null, () => Globals.Instance.world.moverActive().factionName
+								null, () => world.moverActive().factionName
 							)
 						),
 
@@ -128,7 +414,7 @@ function World(actions, moverDefns, map, factions, movers)
 							new Coords(5, 15), // pos
 							new DataBinding
 							(
-								null, () => Globals.Instance.world.moverActive().defnName
+								null, () => world.moverActive().defnName
 							)
 						),
 
@@ -140,8 +426,8 @@ function World(actions, moverDefns, map, factions, movers)
 								null,
 								function get()
 								{
-									var moverActive = Globals.Instance.world.moverActive();
-									var moverDefn = moverActive.defn();
+									var moverActive = world.moverActive();
+									var moverDefn = moverActive.defn(world);
 									return "Health:" + moverActive.integrity + "/" + moverDefn.integrityMax;
 								}
 							)
@@ -155,8 +441,8 @@ function World(actions, moverDefns, map, factions, movers)
 								null,
 								function get()
 								{
-									var moverActive = Globals.Instance.world.moverActive();
-									var moverDefn = moverActive.defn();
+									var moverActive = world.moverActive();
+									var moverDefn = moverActive.defn(world);
 									return "Moves:" + moverActive.movePoints + "/" + moverDefn.movePointsPerTurn;
 								}
 							)
@@ -167,12 +453,12 @@ function World(actions, moverDefns, map, factions, movers)
 			]
 		);
 
-		this.update();
-	};
+		this.updateForTimerTick(universe);
+	}
 
-	World.prototype.update = function()
+	updateForTimerTick(universe)
 	{
-		this.update_Input();
+		this.update_Input(universe);
 
 		this.update_MoversIntegrityCheck();
 
@@ -180,18 +466,22 @@ function World(actions, moverDefns, map, factions, movers)
 
 		this.update_VictoryCheck();
 
-		this.draw(Globals.Instance.universe);
-	};
+		this.draw(universe);
+	}
 
-	World.prototype.update_Input = function()
+	update_Input(universe)
 	{
-		var inputHelper = Globals.Instance.inputHelper;
+		var inputHelper = universe.inputHelper;
 
 		var inputsPressed = inputHelper.inputsPressed;
 		for (var i = 0; i < inputsPressed.length; i++)
 		{
 			var inputName = inputsPressed[i].name;
-			if (inputName == "MouseClick")
+			if (inputName == "MouseMove")
+			{
+				// Ignore it for now.
+			}
+			else if (inputName == "MouseClick")
 			{
 				inputHelper.isMouseClicked = false;
 				this.containerMain.mouseClick
@@ -204,22 +494,23 @@ function World(actions, moverDefns, map, factions, movers)
 				var moverActive = this.moverActive();
 				if (moverActive != null)
 				{
-					var moverActions = moverActive.defn().actionsAvailable();
-					for (var i = 0; i < moverActions.length; i++)
+					var moverActiveDefn = moverActive.defn(this);
+					var moverActions = moverActiveDefn.actionsAvailable(this);
+					for (var j = 0; j < moverActions.length; j++)
 					{
-						var moverAction = moverActions[i];
+						var moverAction = moverActions[j];
 						if (moverAction.key == inputName)
 						{
-							moverAction.perform();
+							moverAction.perform(universe, this);
 							break;
 						}
 					}
 				}
 			}
 		}
-	};
+	}
 
-	World.prototype.update_MoversIntegrityCheck = function()
+	update_MoversIntegrityCheck()
 	{
 		this.moversToRemove.length = 0;
 
@@ -237,9 +528,9 @@ function World(actions, moverDefns, map, factions, movers)
 			var mover = this.moversToRemove[i];
 			this.movers.remove(mover);
 		}
-	};
+	}
 
-	World.prototype.update_VictoryCheck = function()
+	update_VictoryCheck()
 	{
 		var factionNamesPresent = [];
 
@@ -264,11 +555,11 @@ function World(actions, moverDefns, map, factions, movers)
 			var factionNameVictorious = factionNamesPresent[0];
 			alert("The " +  factionNameVictorious + " team wins!");
 		}
-	};
+	}
 
 	// drawable
 
-	World.prototype.draw = function(universe)
+	draw(universe)
 	{
 		var display = universe.display;
 		var world = this;
@@ -286,6 +577,7 @@ function World(actions, moverDefns, map, factions, movers)
 			var mover = movers[i];
 			mover.draw
 			(
+				universe, world,
 				display,
 				map,
 				false // isMoverActive
@@ -295,12 +587,18 @@ function World(actions, moverDefns, map, factions, movers)
 		var mover = world.moverActive();
 		mover.draw
 		(
+			universe, world,
 			display,
 			map,
 			true // isMoverActive
 		);
 
-		var drawLoc = new Location(new Coords(0, 0, 0));
+		var drawLoc = new Disposition(new Coords(0, 0, 0));
 		world.containerMain.draw(universe, display, drawLoc);
-	};
+	}
+
+	toControl()
+	{
+		return new ControlNone();
+	}
 }

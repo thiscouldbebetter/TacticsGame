@@ -1,44 +1,45 @@
 
-function Map(cellSizeInPixels, pos, terrains, cellsAsStrings)
+class MapOfTerrain
 {
-	this.cellSizeInPixels = cellSizeInPixels;
-	this.pos = pos;
-	this.terrains = terrains;
-	this.cellsAsStrings = cellsAsStrings;
+	constructor(cellSizeInPixels, pos, terrains, cellsAsStrings)
+	{
+		this.cellSizeInPixels = cellSizeInPixels;
+		this.pos = pos;
+		this.terrains = terrains;
+		this.cellsAsStrings = cellsAsStrings;
 
-	this.cellSizeInPixelsHalf = this.cellSizeInPixels.clone().divideScalar(2);
+		this.cellSizeInPixelsHalf = this.cellSizeInPixels.clone().divideScalar(2);
 
-	this.terrains.addLookups(x => x.codeChar);
+		this.terrains.addLookups(x => x.codeChar);
 
-	this.sizeInCells = new Coords
-	(
-		this.cellsAsStrings[0].length,
-		this.cellsAsStrings.length
-	);
+		this.sizeInCells = new Coords
+		(
+			this.cellsAsStrings[0].length,
+			this.cellsAsStrings.length
+		);
 
-	this.sizeInCellsMinusOnes = this.sizeInCells.clone().subtract
-	(
-		new Coords(1, 1)
-	);
+		this.sizeInCellsMinusOnes = this.sizeInCells.clone().subtract
+		(
+			new Coords(1, 1)
+		);
 
-	// Helper variables.
+		// Helper variables.
 
-	this._cellPos = new Coords();
-	this._drawPos = new Coords();
-	this._drawPos2 = new Coords();
-}
+		this._cellPos = new Coords();
+		this._drawPos = new Coords();
+		this._drawPos2 = new Coords();
+	}
 
-{
-	Map.prototype.terrainAtPos = function(cellPos)
+	terrainAtPos(cellPos)
 	{
 		var terrainChar = this.cellsAsStrings[cellPos.y][cellPos.x];
 		var terrain = this.terrains[terrainChar];
 		return terrain;
-	};
+	}
 
 	// drawable
 
-	Map.prototype.draw = function(display)
+	draw(display)
 	{
 		var map = this;
 		var sizeInCells = map.sizeInCells;
@@ -79,6 +80,6 @@ function Map(cellSizeInPixels, pos, terrains, cellsAsStrings)
 				);
 			}
 		}
-	};
+	}
 
 }
