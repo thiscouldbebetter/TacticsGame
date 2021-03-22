@@ -1,8 +1,11 @@
 
-function MapTerrain(name, codeChar, movePointsToTraverse, color)
+class MapTerrain
 {
-	this.name = name;
-	this.codeChar = codeChar;
-	this.movePointsToTraverse = movePointsToTraverse;
-	this.color = color;
+	constructor(name, codeChar, movePointsToTraverse, color)
+	{
+		this.name = name;
+		this.codeChar = codeChar;
+		this.movePointsToTraverse = movePointsToTraverse;
+		this.color = color;
+	}
 }
