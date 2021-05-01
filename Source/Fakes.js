@@ -1,7 +1,6 @@
 
 // Fake classes, to prevent need for including everything from Framework.
 
-class CollisionHelper {}
 class EntityBuilder {}
 class IDHelper
 {

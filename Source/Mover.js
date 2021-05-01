@@ -11,12 +11,12 @@ class Mover
 
 	defn(world)
 	{
-		return world.moverDefns[this.defnName];
+		return world.moverDefnsByName.get(this.defnName);
 	}
 
 	faction(world)
 	{
-		return world.factions[this.factionName];
+		return world.factionsByName.get(this.factionName);
 	}
 
 	name()
@@ -60,8 +60,8 @@ class Mover
 
 		var radius = mapCellSizeInPixelsHalf.x;
 
-		var colorHighlight = "White";
-		var colorStroke = (isMoverActive == true ? colorHighlight : display.colorFore);
+		var colorHighlight = Color.byName("White");
+		var colorStroke = (isMoverActive ? colorHighlight : display.colorFore);
 
 		display.drawCircle
 		(
@@ -93,7 +93,7 @@ class Mover
 			drawPos, colorStroke
 		);
 
-		if (isMoverActive == true)
+		if (isMoverActive)
 		{
 			if (this.targetPos != null)
 			{
@@ -110,7 +110,10 @@ class Mover
 				(
 					mapCellSizeInPixelsHalf
 				);
-				display.drawCircle(drawPos, radius / 2, colorStroke, "Red");
+				display.drawCircle
+				(
+					drawPos, radius / 2, colorStroke, Color.byName("Red")
+				);
 			}
 		}
 	}

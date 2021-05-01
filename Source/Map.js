@@ -10,7 +10,8 @@ class MapOfTerrain
 
 		this.cellSizeInPixelsHalf = this.cellSizeInPixels.clone().divideScalar(2);
 
-		this.terrains.addLookups(x => x.codeChar);
+		this.terrainsByCode =
+			ArrayHelper.addLookups(this.terrains, x => x.codeChar);
 
 		this.sizeInCells = new Coords
 		(
@@ -33,7 +34,7 @@ class MapOfTerrain
 	terrainAtPos(cellPos)
 	{
 		var terrainChar = this.cellsAsStrings[cellPos.y][cellPos.x];
-		var terrain = this.terrains[terrainChar];
+		var terrain = this.terrainsByCode.get(terrainChar);
 		return terrain;
 	}
 
@@ -76,7 +77,7 @@ class MapOfTerrain
 					drawPos,
 					mapCellSizeInPixels,
 					cellTerrain.color, // fill
-					"Gray" // border
+					Color.byName("Gray") // border
 				);
 			}
 		}

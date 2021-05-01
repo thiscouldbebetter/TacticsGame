@@ -9,9 +9,9 @@ class World
 		this.movers = movers;
 		this.factions = factions;
 
-		this.actions.addLookupsByName();
-		this.factions.addLookupsByName();
-		this.moverDefns.addLookupsByName();
+		this.actionsByName = ArrayHelper.addLookupsByName(this.actions);
+		this.factionsByName = ArrayHelper.addLookupsByName(this.factions);
+		this.moverDefnsByName = ArrayHelper.addLookupsByName(this.moverDefns);
 
 		this.moversToRemove = [];
 	}
@@ -207,8 +207,8 @@ class World
 
 		var mapTerrains =
 		[
-			new MapTerrain("Open", ".", 1, "Green"),
-			new MapTerrain("Blocked", "x", 100, "Gray"),
+			new MapTerrain("Open", ".", 1, Color.byName("GreenDark")),
+			new MapTerrain("Blocked", "x", 100, Color.byName("Gray")),
 		];
 
 		var map = new MapOfTerrain
@@ -231,8 +231,8 @@ class World
 
 		var factions =
 		[
-			new Faction("Blue", "Blue"),
-			new Faction("Red", "Red"),
+			new Faction("Blue", Color.byName("Blue")),
+			new Faction("Red", Color.byName("Red")),
 		];
 
 		var movers =
@@ -240,7 +240,7 @@ class World
 			new Mover
 			(
 				"Slugger", // defnName
-				"Blue", // faction
+				"Blue", // factionName
 				new Coords(1, 0), // orientation
 				new Coords(1, 1) // pos
 			),
@@ -248,7 +248,7 @@ class World
 			new Mover
 			(
 				"Sniper", // defnName
-				"Blue", // faction
+				"Blue", // factionName
 				new Coords(1, 0), // orientation
 				new Coords(3, 1) // pos
 			),
@@ -256,7 +256,7 @@ class World
 			new Mover
 			(
 				"Sprinter", // defnName
-				"Blue", // faction
+				"Blue", // factionName
 				new Coords(1, 0), // orientation
 				new Coords(1, 3) // pos
 			),
@@ -264,7 +264,7 @@ class World
 			new Mover
 			(
 				"Slugger", // defnName
-				"Red", // faction
+				"Red", // factionName
 				new Coords(1, 0), // orientation
 				new Coords(5, 3) // pos
 			),
@@ -272,7 +272,7 @@ class World
 			new Mover
 			(
 				"Sniper", // defnName
-				"Red", // faction
+				"Red", // factionName
 				new Coords(1, 0), // orientation
 				new Coords(3, 3) // pos
 			),
@@ -280,7 +280,7 @@ class World
 			new Mover
 			(
 				"Sprinter", // defnName
-				"Red", // faction
+				"Red", // factionName
 				new Coords(1, 0), // orientation
 				new Coords(5, 1) // pos
 			),
@@ -486,7 +486,7 @@ class World
 				inputHelper.isMouseClicked = false;
 				this.containerMain.mouseClick
 				(
-					inputHelper.mousePos
+					inputHelper.mouseClickPos
 				);
 			}
 			else
@@ -526,7 +526,7 @@ class World
 		for (var i = 0; i < this.moversToRemove.length; i++)
 		{
 			var mover = this.moversToRemove[i];
-			this.movers.remove(mover);
+			ArrayHelper.remove(this.movers, mover);
 		}
 	}
 
@@ -565,7 +565,11 @@ class World
 		var world = this;
 		display.clear();
 
-		display.drawRectangle(Coords.Instances().Zeroes, display.sizeInPixels, "White", "Gray")
+		display.drawRectangle
+		(
+			Coords.Instances().Zeroes, display.sizeInPixels,
+			Color.byName("White"), Color.byName("Gray")
+		)
 
 		var map = world.map;
 
@@ -600,5 +604,28 @@ class World
 	toControl()
 	{
 		return new ControlNone();
+	}
+
+	toVenue()
+	{
+		return new VenueWorld(this);
+	}
+}
+
+class VenueWorld
+{
+	constructor(world)
+	{
+		this.world = world;
+	}
+
+	initialize(universe, world)
+	{
+		this.world.initialize(universe);
+	}
+
+	updateForTimerTick(universe, world)
+	{
+		this.world.updateForTimerTick(universe, world);
 	}
 }

@@ -23,27 +23,28 @@ function main()
 		displaySizesAvailable,
 		"Font", // fontName
 		10, // fontHeightInPixels
-		"Gray", "White", // colorFore, colorBack
+		Color.byName("Gray"), Color.byName("White"), // colorFore, colorBack
 		null
 	);
 
 	var timerHelper = new TimerHelper(20);
 
 	var controlStyle = ControlStyle.Instances().Default;
+	var controlBuilder = new ControlBuilder( [ controlStyle ] );
 
 	var universe = Universe.create
 	(
 		"Tactics Game",
-		"0.0.0-20201024-1530", // version
+		"0.0.0-20210501-1600", // version
 		timerHelper,
 		display,
 		mediaLibrary,
-		controlStyle,
-		null
+		controlBuilder,
+		World.create
 	);
 	universe.initialize
 	(
-		() => { universe.start(); }
+		() => universe.start()
 	);
 }
 

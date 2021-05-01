@@ -25,12 +25,12 @@ class MoverDefn
 	{
 		var returnValues = [];
 
-		var actionsAll = world.actions;
+		var actionsAll = world.actionsByName;
 
 		for (var i = 0; i < this.actionNamesAvailable.length; i++)
 		{
 			var actionName = this.actionNamesAvailable[i];
-			var action = actionsAll[actionName];
+			var action = actionsAll.get(actionName);
 			returnValues.push(action);
 		}
 
