@@ -1,7 +1,22 @@
 
 class Mover
 {
-	constructor(defnName, factionName, orientation, pos)
+	defnName: string;
+	factionName: string;
+	orientation: Coords;
+	pos: Coords;
+
+	integrity: number;
+	movePoints: number;
+	targetPos: Coords;
+
+	constructor
+	(
+		defnName: string,
+		factionName: string,
+		orientation: Coords,
+		pos: Coords
+	)
 	{
 		this.defnName = defnName;
 		this.factionName = factionName;
@@ -9,22 +24,22 @@ class Mover
 		this.pos = pos;
 	}
 
-	defn(world)
+	defn(world: WorldExtended): MoverDefn
 	{
 		return world.moverDefnsByName.get(this.defnName);
 	}
 
-	faction(world)
+	faction(world: WorldExtended): Faction
 	{
 		return world.factionsByName.get(this.factionName);
 	}
 
-	name()
+	name(): string
 	{
 		return this.factionName + " " + this.defnName;
 	}
 
-	initialize(universe, world)
+	initialize(universe: Universe, world: WorldExtended): void
 	{
 		var defn = this.defn(world);
 		this.integrity = defn.integrityMax;
@@ -33,7 +48,11 @@ class Mover
 
 	// drawable
 
-	draw(universe, world, display, map, isMoverActive)
+	draw
+	(
+		universe: Universe, world: WorldExtended, display: Display, 
+		map: MapOfTerrain, isMoverActive: boolean
+	): void
 	{
 		var mover = this;
 		var moverDefn = mover.defn(world);
@@ -68,7 +87,8 @@ class Mover
 			drawPos,
 			radius,
 			mover.faction(world).color,
-			colorStroke
+			colorStroke,
+			1 // borderThickness
 		);
 
 		drawPos2.overwriteWith
@@ -82,7 +102,7 @@ class Mover
 			drawPos
 		);
 
-		display.drawLine(drawPos, drawPos2, colorStroke);
+		display.drawLine(drawPos, drawPos2, colorStroke, 1);
 
 		drawPos.subtract(mapCellSizeInPixelsHalf);
 
@@ -90,7 +110,9 @@ class Mover
 		(
 			" " + moverDefn.codeChar,
 			null, // fontHeight
-			drawPos, colorStroke
+			drawPos,
+			colorStroke,
+			null, null, null, null // ?
 		);
 
 		if (isMoverActive)
@@ -110,9 +132,11 @@ class Mover
 				(
 					mapCellSizeInPixelsHalf
 				);
+
 				display.drawCircle
 				(
-					drawPos, radius / 2, colorStroke, Color.byName("Red")
+					drawPos, radius / 2, colorStroke, Color.byName("Red"),
+					1 // borderThickness
 				);
 			}
 		}

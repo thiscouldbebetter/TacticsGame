@@ -3,8 +3,8 @@ class ControlHelper
 {
 	static toControlsMany
 	(
-		controllables, posOfFirst, spacing
-	)
+		controllables: Controllable[], posOfFirst: Coords, spacing: Coords
+	): ControlBase[]
 	{
 		var returnValues = [];
 

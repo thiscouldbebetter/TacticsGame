@@ -1,0 +1,5 @@
+
+interface Controllable
+{
+	toControl(): ControlBase
+}

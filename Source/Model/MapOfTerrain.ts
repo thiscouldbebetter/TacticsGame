@@ -1,19 +1,37 @@
 
 class MapOfTerrain
 {
-	constructor(cellSizeInPixels, pos, terrains, cellsAsStrings)
+	cellSizeInPixels: Coords;
+	pos: Coords;
+	terrains: MapTerrain[];
+	cellsAsStrings: string[];
+
+	cellSizeInPixelsHalf: Coords;
+	terrainsByCode: Map<string, MapTerrain>;
+	sizeInCells: Coords;
+	sizeInCellsMinusOnes: Coords;
+
+	_cellPos: Coords;
+	_drawPos: Coords;
+	_drawPos2: Coords;
+
+	constructor
+	(
+		cellSizeInPixels: Coords, pos: Coords, terrains: MapTerrain[],
+		cellsAsStrings: string[]
+	)
 	{
 		this.cellSizeInPixels = cellSizeInPixels;
 		this.pos = pos;
 		this.terrains = terrains;
 		this.cellsAsStrings = cellsAsStrings;
 
-		this.cellSizeInPixelsHalf = this.cellSizeInPixels.clone().divideScalar(2);
+		this.cellSizeInPixelsHalf = this.cellSizeInPixels.clone().half();
 
 		this.terrainsByCode =
 			ArrayHelper.addLookups(this.terrains, x => x.codeChar);
 
-		this.sizeInCells = new Coords
+		this.sizeInCells = Coords.fromXY
 		(
 			this.cellsAsStrings[0].length,
 			this.cellsAsStrings.length
@@ -21,17 +39,17 @@ class MapOfTerrain
 
 		this.sizeInCellsMinusOnes = this.sizeInCells.clone().subtract
 		(
-			new Coords(1, 1)
+			Coords.fromXY(1, 1)
 		);
 
 		// Helper variables.
 
-		this._cellPos = new Coords();
-		this._drawPos = new Coords();
-		this._drawPos2 = new Coords();
+		this._cellPos = Coords.create();
+		this._drawPos = Coords.create();
+		this._drawPos2 = Coords.create();
 	}
 
-	terrainAtPos(cellPos)
+	terrainAtPos(cellPos: Coords): MapTerrain
 	{
 		var terrainChar = this.cellsAsStrings[cellPos.y][cellPos.x];
 		var terrain = this.terrainsByCode.get(terrainChar);
@@ -40,7 +58,7 @@ class MapOfTerrain
 
 	// drawable
 
-	draw(display)
+	draw(display: Display): void
 	{
 		var map = this;
 		var sizeInCells = map.sizeInCells;
@@ -77,7 +95,8 @@ class MapOfTerrain
 					drawPos,
 					mapCellSizeInPixels,
 					cellTerrain.color, // fill
-					Color.byName("Gray") // border
+					Color.byName("Gray"), // border
+					null // areColorsReversed
 				);
 			}
 		}

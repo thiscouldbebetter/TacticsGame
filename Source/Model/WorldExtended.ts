@@ -1,8 +1,36 @@
 
-class World
+class WorldExtended extends World
 {
-	constructor(actions, moverDefns, map, factions, movers)
+	actions: Action2[];
+	moverDefns: MoverDefn[];
+	map: MapOfTerrain;
+	factions: Faction[];
+	movers: Mover[];
+
+	actionsByName: Map<string, Action2>;
+	containerMain: ControlContainer;
+	factionsByName: Map<string, Faction>;
+	indexOfMoverActive: number;
+	moverDefnsByName: Map<string, MoverDefn>;
+	moversToRemove: Mover[];
+
+	constructor
+	(
+		actions: Action2[],
+		moverDefns: MoverDefn[],
+		map: MapOfTerrain,
+		factions: Faction[],
+		movers: Mover[]
+	)
 	{
+		super
+		(
+			"World",
+			DateTime.now(),
+			null, // defn
+			[] // places
+		);
+
 		this.actions = actions;
 		this.moverDefns = moverDefns;
 		this.map = map;
@@ -16,10 +44,12 @@ class World
 		this.moversToRemove = [];
 	}
 
-	static create()
+	static create(): WorldExtended
 	{
-		var actionMovePerform = (universe, world, direction) =>
+		var actionMovePerform = (universe: Universe, worldAsWorld: World, direction: Coords) =>
 		{
+			var world = worldAsWorld as WorldExtended;
+
 			var moverActive = world.moverActive();
 			var targetPos = moverActive.targetPos;
 			if (targetPos == null)
@@ -85,7 +115,7 @@ class World
 			(
 				"Attack",
 				"f", // keyCode
-				(universe, world) => // perform
+				(universe: Universe, world: WorldExtended) => // perform
 				{
 					var moverActive = world.moverActive();
 					if (moverActive.movePoints <= 0)
@@ -122,43 +152,43 @@ class World
 			(
 				"Down",
 				"s", // keyCode
-				(universe, world) => // perform
+				(universe: Universe, world: WorldExtended) => // perform
 				{
-					actionMovePerform(universe, world, new Coords(0, 1));
+					actionMovePerform(universe, world, Coords.fromXY(0, 1));
 				}
 			),
 			new Action2
 			(
 				"Left",
 				"a", // keyCode
-				(universe, world) => // perform
+				(universe: Universe, world: WorldExtended) => // perform
 				{
-					actionMovePerform(universe, world, new Coords(-1, 0));
+					actionMovePerform(universe, world, Coords.fromXY(-1, 0));
 				}
 			),
 			new Action2
 			(
 				"Right",
 				"d", // keyCode
-				(universe, world) => // perform
+				(universe: Universe, world: WorldExtended) => // perform
 				{
-					actionMovePerform(universe, world, new Coords(1, 0));
+					actionMovePerform(universe, world, Coords.fromXY(1, 0));
 				}
 			),
 			new Action2
 			(
 				"Up",
 				"w", // keyCode
-				(universe, world) => // perform
+				(universe: Universe, world: WorldExtended) => // perform
 				{
-					actionMovePerform(universe, world, new Coords(0, -1));
+					actionMovePerform(universe, world, Coords.fromXY(0, -1));
 				}
 			),
 			new Action2
 			(
 				"Pass",
 				"p", // keyCode
-				(universe, world) => // perform
+				(universe: Universe, world: WorldExtended) => // perform
 				{
 					var moverActive = world.moverActive();
 
@@ -213,8 +243,8 @@ class World
 
 		var map = new MapOfTerrain
 		(
-			new Coords(20, 20), // cellSizeInPixels
-			new Coords(20, 20), // pos
+			Coords.fromXY(20, 20), // cellSizeInPixels
+			Coords.fromXY(20, 20), // pos
 			mapTerrains,
 			// cellsAsStrings
 			[
@@ -241,52 +271,52 @@ class World
 			(
 				"Slugger", // defnName
 				"Blue", // factionName
-				new Coords(1, 0), // orientation
-				new Coords(1, 1) // pos
+				Coords.fromXY(1, 0), // orientation
+				Coords.fromXY(1, 1) // pos
 			),
 
 			new Mover
 			(
 				"Sniper", // defnName
 				"Blue", // factionName
-				new Coords(1, 0), // orientation
-				new Coords(3, 1) // pos
+				Coords.fromXY(1, 0), // orientation
+				Coords.fromXY(3, 1) // pos
 			),
 
 			new Mover
 			(
 				"Sprinter", // defnName
 				"Blue", // factionName
-				new Coords(1, 0), // orientation
-				new Coords(1, 3) // pos
+				Coords.fromXY(1, 0), // orientation
+				Coords.fromXY(1, 3) // pos
 			),
 
 			new Mover
 			(
 				"Slugger", // defnName
 				"Red", // factionName
-				new Coords(1, 0), // orientation
-				new Coords(5, 3) // pos
+				Coords.fromXY(1, 0), // orientation
+				Coords.fromXY(5, 3) // pos
 			),
 
 			new Mover
 			(
 				"Sniper", // defnName
 				"Red", // factionName
-				new Coords(1, 0), // orientation
-				new Coords(3, 3) // pos
+				Coords.fromXY(1, 0), // orientation
+				Coords.fromXY(3, 3) // pos
 			),
 
 			new Mover
 			(
 				"Sprinter", // defnName
 				"Red", // factionName
-				new Coords(1, 0), // orientation
-				new Coords(5, 1) // pos
+				Coords.fromXY(1, 0), // orientation
+				Coords.fromXY(5, 1) // pos
 			),
 		];
 
-		var world = new World
+		var world = new WorldExtended
 		(
 			actions,
 			moverDefns,
@@ -298,7 +328,7 @@ class World
 		return world;
 	}
 
-	moverActive()
+	moverActive(): Mover
 	{
 		var returnValue = null;
 
@@ -310,7 +340,7 @@ class World
 		return returnValue;
 	}
 
-	moverActiveAdvanceIfNeeded()
+	moverActiveAdvanceIfNeeded(): Mover
 	{
 		var moverActive = this.moverActive();
 
@@ -335,7 +365,7 @@ class World
 		return moverActive;
 	}
 
-	moverAtPos(posToCheck)
+	moverAtPos(posToCheck: Coords): Mover
 	{
 		var returnValue = null;
 
@@ -352,7 +382,7 @@ class World
 		return returnValue;
 	}
 
-	moversReplenish()
+	moversReplenish(): void
 	{
 		for (var i = 0; i < this.movers.length; i++)
 		{
@@ -361,7 +391,7 @@ class World
 		}
 	}
 
-	initialize(universe)
+	initialize(universe: Universe): void
 	{
 		var world = this;
 
@@ -371,60 +401,59 @@ class World
 			mover.initialize(universe, world);
 		}
 
-		var moverActive = this.moverActiveAdvanceIfNeeded(universe, world);
+		var moverActive = this.moverActiveAdvanceIfNeeded();
 
-		this.containerMain = new ControlContainer
+		this.containerMain = ControlContainer.from4
 		(
 			"containerMain",
-			new Coords(200, 10), // pos
-			new Coords(90, 180), // size
+			Coords.fromXY(200, 10), // pos
+			Coords.fromXY(90, 180), // size
 			[
-				new ControlContainer
+				ControlContainer.from4
 				(
 					"containerActions",
-					new Coords(10, 10), // pos
-					new Coords(70, 90), // size
+					Coords.fromXY(10, 10), // pos
+					Coords.fromXY(70, 90), // size
 					// children
 					ControlHelper.toControlsMany
 					(
 						moverActive.defn(world).actionsAvailable(world),
-						new Coords(10, 10), // posFirst
-						new Coords(0, 12) // spacing
+						Coords.fromXY(10, 10), // posFirst
+						Coords.fromXY(0, 12) // spacing
 					)
 				),
 
-				new ControlContainer
+				ControlContainer.from4
 				(
 					"containerSelection",
-					new Coords(10, 110), // pos
-					new Coords(70, 60), // size
+					Coords.fromXY(10, 110), // pos
+					Coords.fromXY(70, 60), // size
 					// children
 					[
 						ControlLabel.fromPosAndText
 						(
-							new Coords(5, 5), // pos
-							new DataBinding
+							Coords.fromXY(5, 5), // pos
+							DataBinding.fromGet
 							(
-								null, () => world.moverActive().factionName
+								(c: any) => world.moverActive().factionName
 							)
 						),
 
 						ControlLabel.fromPosAndText
 						(
-							new Coords(5, 15), // pos
-							new DataBinding
+							Coords.fromXY(5, 15), // pos
+							DataBinding.fromGet
 							(
-								null, () => world.moverActive().defnName
+								(c: any) => world.moverActive().defnName
 							)
 						),
 
 						ControlLabel.fromPosAndText
 						(
-							new Coords(5, 25), // pos
-							new DataBinding
+							Coords.fromXY(5, 25), // pos
+							DataBinding.fromGet
 							(
-								null,
-								function get()
+								(c: any) =>
 								{
 									var moverActive = world.moverActive();
 									var moverDefn = moverActive.defn(world);
@@ -435,11 +464,10 @@ class World
 
 						ControlLabel.fromPosAndText
 						(
-							new Coords(5, 35), // pos
-							new DataBinding
+							Coords.fromXY(5, 35), // pos
+							DataBinding.fromGet
 							(
-								null,
-								function get()
+								(c: any) =>
 								{
 									var moverActive = world.moverActive();
 									var moverDefn = moverActive.defn(world);
@@ -456,7 +484,7 @@ class World
 		this.updateForTimerTick(universe);
 	}
 
-	updateForTimerTick(universe)
+	updateForTimerTick(universe: Universe): void
 	{
 		this.update_Input(universe);
 
@@ -469,7 +497,7 @@ class World
 		this.draw(universe);
 	}
 
-	update_Input(universe)
+	update_Input(universe: Universe): void
 	{
 		var inputHelper = universe.inputHelper;
 
@@ -483,7 +511,7 @@ class World
 			}
 			else if (inputName == "MouseClick")
 			{
-				inputHelper.isMouseClicked = false;
+				inputHelper.isMouseClicked(false);
 				this.containerMain.mouseClick
 				(
 					inputHelper.mouseClickPos
@@ -510,7 +538,7 @@ class World
 		}
 	}
 
-	update_MoversIntegrityCheck()
+	update_MoversIntegrityCheck(): void
 	{
 		this.moversToRemove.length = 0;
 
@@ -530,17 +558,18 @@ class World
 		}
 	}
 
-	update_VictoryCheck()
+	update_VictoryCheck(): void
 	{
 		var factionNamesPresent = [];
+		var factionNamesPresentAsMap = new Map<string, string>();
 
 		for (var i = 0; i < this.movers.length; i++)
 		{
 			var mover = this.movers[i];
 			var moverFactionName = mover.factionName;
-			if (factionNamesPresent[moverFactionName] == null)
+			if (factionNamesPresentAsMap.has(moverFactionName) == false)
 			{
-				factionNamesPresent[moverFactionName] = moverFactionName;
+				factionNamesPresentAsMap.set(moverFactionName, moverFactionName);
 				factionNamesPresent.push(moverFactionName);
 
 				if (factionNamesPresent.length > 1)
@@ -559,7 +588,7 @@ class World
 
 	// drawable
 
-	draw(universe)
+	draw(universe: Universe): void
 	{
 		var display = universe.display;
 		var world = this;
@@ -568,7 +597,8 @@ class World
 		display.drawRectangle
 		(
 			Coords.Instances().Zeroes, display.sizeInPixels,
-			Color.byName("White"), Color.byName("Gray")
+			Color.byName("White"), Color.byName("Gray"),
+			null // areColorsReversed
 		)
 
 		var map = world.map;
@@ -597,35 +627,20 @@ class World
 			true // isMoverActive
 		);
 
-		var drawLoc = new Disposition(new Coords(0, 0, 0));
-		world.containerMain.draw(universe, display, drawLoc);
+		var drawLoc = Disposition.create();
+		world.containerMain.draw
+		(
+			universe, display, drawLoc, null // style
+		);
 	}
 
-	toControl()
+	toControl(): ControlBase
 	{
 		return new ControlNone();
 	}
 
-	toVenue()
+	toVenue(): VenueWorld
 	{
 		return new VenueWorld(this);
-	}
-}
-
-class VenueWorld
-{
-	constructor(world)
-	{
-		this.world = world;
-	}
-
-	initialize(universe, world)
-	{
-		this.world.initialize(universe);
-	}
-
-	updateForTimerTick(universe, world)
-	{
-		this.world.updateForTimerTick(universe, world);
 	}
 }

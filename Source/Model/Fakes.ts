@@ -1,12 +1,17 @@
 
 // Fake classes, to prevent need for including everything from Framework.
 
-class EntityBuilder {}
+class EntityBuilder
+{}
+
 class IDHelper
 {
-	static Instance() { return null; }
+	static Instance(): IDHelper { return null; }
 }
-class RandomizerSystem {}
+
+class RandomizerSystem
+{}
+
 class URLParser
 {
 	static fromWindow()
