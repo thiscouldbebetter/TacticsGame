@@ -1,34 +1,34 @@
 "use strict";
 class WorldExtended extends World {
-    constructor(actions, actionToInputsMappings, moverDefns, map, factions, movers) {
+    constructor(actions, actionToInputsMappings, moverDefns, factions, placeBattlefield) {
         super("World", DateTime.now(), null, // defn
         [] // places
         );
         this.actions = actions;
         this.actionToInputsMappings = actionToInputsMappings;
         this.moverDefns = moverDefns;
-        this.map = map;
-        this.movers = movers;
         this.factions = factions;
+        this.placeBattlefield = placeBattlefield;
         this.actionsByName = ArrayHelper.addLookupsByName(this.actions);
         this.actionToInputsMappingsByInputName = ArrayHelper.addLookups(this.actionToInputsMappings, (x) => x.inputNames[0]);
         this.factionsByName = ArrayHelper.addLookupsByName(this.factions);
         this.moverDefnsByName = ArrayHelper.addLookupsByName(this.moverDefns);
-        this.moversToRemove = [];
     }
     static create() {
         var actionMovePerform = (universe, worldAsWorld, direction) => {
             var world = worldAsWorld;
-            var moverActive = world.moverActive();
+            var place = world.placeBattlefield;
+            var map = place.map;
+            var moverActive = place.moverActive();
             var targetPos = moverActive.targetPos;
             if (targetPos == null) {
                 var moverOrientation = moverActive.orientation;
-                if (moverOrientation.equals(direction) == true) {
-                    var moverPosNext = moverActive.pos.clone().add(direction).trimToRangeMax(world.map.sizeInCellsMinusOnes);
-                    var terrain = world.map.terrainAtPos(moverPosNext);
+                if (moverOrientation.equals(direction)) {
+                    var moverPosNext = moverActive.pos.clone().add(direction).trimToRangeMax(map.sizeInCellsMinusOnes);
+                    var terrain = map.terrainAtPos(moverPosNext);
                     var movePointsToTraverse = terrain.movePointsToTraverse;
                     if (moverActive.movePoints >= movePointsToTraverse) {
-                        if (world.moverAtPos(moverPosNext) == null) {
+                        if (place.moverAtPos(moverPosNext) == null) {
                             moverActive.pos.overwriteWith(moverPosNext);
                             moverActive.movePoints -= movePointsToTraverse;
                         }
@@ -37,7 +37,7 @@ class WorldExtended extends World {
                 moverOrientation.overwriteWith(direction);
             }
             else {
-                var targetPosNext = targetPos.clone().add(direction).trimToRangeMax(world.map.sizeInCellsMinusOnes);
+                var targetPosNext = targetPos.clone().add(direction).trimToRangeMax(map.sizeInCellsMinusOnes);
                 var targetDisplacementNext = targetPosNext.clone().subtract(moverActive.pos);
                 var targetDistanceNext = targetDisplacementNext.magnitude();
                 if (targetDistanceNext <= moverActive.defn(world).attackRange) {
@@ -49,7 +49,8 @@ class WorldExtended extends World {
             new Action("Attack", (universe, worldAsWorld, p, e) => // perform
              {
                 var world = worldAsWorld;
-                var moverActive = world.moverActive();
+                var place = world.placeBattlefield;
+                var moverActive = place.moverActive();
                 if (moverActive.movePoints <= 0) {
                     return; // hack
                 }
@@ -57,7 +58,7 @@ class WorldExtended extends World {
                     moverActive.targetPos = moverActive.pos.clone().add(moverActive.orientation);
                 }
                 else {
-                    var moverTarget = world.moverAtPos(moverActive.targetPos);
+                    var moverTarget = place.moverAtPos(moverActive.targetPos);
                     if (moverTarget != null) {
                         moverTarget.integrity -= moverActive.defn(world).attackDamage;
                     }
@@ -88,18 +89,19 @@ class WorldExtended extends World {
             new Action("Pass", (universe, worldAsWorld, p, e) => // perform
              {
                 var world = worldAsWorld;
-                var moverActive = world.moverActive();
+                var place = world.placeBattlefield;
+                var moverActive = place.moverActive();
                 moverActive.movePoints = 0;
             }),
         ];
         var actionNamesStandard = ["Attack", "Up", "Down", "Left", "Right", "Pass"];
         var actionToInputsMappings = [
-            ActionToInputsMapping.fromActionAndInputName("Attack", "f"),
-            ActionToInputsMapping.fromActionAndInputName("Up", "w"),
-            ActionToInputsMapping.fromActionAndInputName("Down", "s"),
-            ActionToInputsMapping.fromActionAndInputName("Left", "a"),
-            ActionToInputsMapping.fromActionAndInputName("Right", "d"),
-            ActionToInputsMapping.fromActionAndInputName("Pass", "p"),
+            new ActionToInputsMapping("Attack", ["f"], true),
+            new ActionToInputsMapping("Up", ["w"], true),
+            new ActionToInputsMapping("Down", ["s"], true),
+            new ActionToInputsMapping("Left", ["a"], true),
+            new ActionToInputsMapping("Right", ["d"], true),
+            new ActionToInputsMapping("Pass", ["p"], true),
         ];
         var moverDefns = [
             new MoverDefn("Slugger", "A", 3, // integrityMax
@@ -172,180 +174,22 @@ class WorldExtended extends World {
             Coords.fromXY(5, 1) // pos
             ),
         ];
-        var world = new WorldExtended(actions, actionToInputsMappings, moverDefns, map, factions, movers);
+        var placeBattlefield = new PlaceBattlefield(map, movers);
+        var world = new WorldExtended(actions, actionToInputsMappings, moverDefns, factions, placeBattlefield);
         return world;
     }
     actionByName(actionName) {
         return this.actionsByName.get(actionName);
     }
-    moverActive() {
-        var returnValue = null;
-        if (this.indexOfMoverActive != null) {
-            returnValue = this.movers[this.indexOfMoverActive];
-        }
-        return returnValue;
-    }
-    moverActiveAdvanceIfNeeded() {
-        var moverActive = this.moverActive();
-        if (moverActive == null) {
-            this.moversReplenish();
-            this.indexOfMoverActive = 0;
-            moverActive = this.moverActive();
-        }
-        else if (moverActive.movePoints <= 0) {
-            this.indexOfMoverActive++;
-            if (this.indexOfMoverActive >= this.movers.length) {
-                this.moversReplenish();
-                this.indexOfMoverActive = 0;
-            }
-            moverActive = this.moverActive();
-        }
-        return moverActive;
-    }
-    moverAtPos(posToCheck) {
-        var returnValue = null;
-        for (var i = 0; i < this.movers.length; i++) {
-            var mover = this.movers[i];
-            if (mover.pos.equals(posToCheck) == true) {
-                returnValue = mover;
-                break;
-            }
-        }
-        return returnValue;
-    }
-    moversReplenish() {
-        for (var i = 0; i < this.movers.length; i++) {
-            var mover = this.movers[i];
-            mover.movePoints = mover.defn(this).movePointsPerTurn;
-        }
-    }
     initialize(universe) {
-        var world = this;
-        for (var i = 0; i < this.movers.length; i++) {
-            var mover = this.movers[i];
-            mover.initialize(universe, world);
-        }
-        var moverActive = this.moverActiveAdvanceIfNeeded();
-        this.containerMain = ControlContainer.from4("containerMain", Coords.fromXY(200, 10), // pos
-        Coords.fromXY(90, 180), // size
-        [
-            ControlContainer.from4("containerActions", Coords.fromXY(10, 10), // pos
-            Coords.fromXY(70, 90), // size
-            // children
-            ActionHelper.actionsToControls(moverActive.defn(world).actionsAvailable(world), Coords.fromXY(10, 10), // posFirst
-            Coords.fromXY(0, 12) // spacing
-            )),
-            ControlContainer.from4("containerSelection", Coords.fromXY(10, 110), // pos
-            Coords.fromXY(70, 60), // size
-            // children
-            [
-                ControlLabel.fromPosAndText(Coords.fromXY(5, 5), // pos
-                DataBinding.fromGet((c) => world.moverActive().factionName)),
-                ControlLabel.fromPosAndText(Coords.fromXY(5, 15), // pos
-                DataBinding.fromGet((c) => world.moverActive().defnName)),
-                ControlLabel.fromPosAndText(Coords.fromXY(5, 25), // pos
-                DataBinding.fromGet((c) => {
-                    var moverActive = world.moverActive();
-                    var moverDefn = moverActive.defn(world);
-                    return "Health:" + moverActive.integrity + "/" + moverDefn.integrityMax;
-                })),
-                ControlLabel.fromPosAndText(Coords.fromXY(5, 35), // pos
-                DataBinding.fromGet((c) => {
-                    var moverActive = world.moverActive();
-                    var moverDefn = moverActive.defn(world);
-                    return "Moves:" + moverActive.movePoints + "/" + moverDefn.movePointsPerTurn;
-                }))
-            ]),
-        ]);
-        this.updateForTimerTick(universe);
+        this.placeBattlefield.initialize(universe, this);
     }
     updateForTimerTick(universe) {
-        this.update_Input(universe);
-        this.update_MoversIntegrityCheck();
-        this.moverActiveAdvanceIfNeeded();
-        this.update_VictoryCheck();
-        this.draw(universe);
-    }
-    update_Input(universe) {
-        var inputHelper = universe.inputHelper;
-        var inputsPressed = inputHelper.inputsPressed;
-        for (var i = 0; i < inputsPressed.length; i++) {
-            var inputName = inputsPressed[i].name;
-            if (inputName == "MouseMove") {
-                // Ignore it for now.
-            }
-            else if (inputName == "MouseClick") {
-                inputHelper.isMouseClicked(false);
-                this.containerMain.mouseClick(inputHelper.mouseClickPos);
-            }
-            else {
-                var mapping = this.actionToInputsMappingsByInputName.get(inputName);
-                if (mapping != null) {
-                    var moverActive = this.moverActive();
-                    if (moverActive != null) {
-                        var moverActionName = mapping.actionName;
-                        var moverAction = this.actionByName(moverActionName);
-                        if (moverAction != null) {
-                            moverAction.perform(universe, this, null, null);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    update_MoversIntegrityCheck() {
-        this.moversToRemove.length = 0;
-        for (var i = 0; i < this.movers.length; i++) {
-            var mover = this.movers[i];
-            if (mover.integrity <= 0) {
-                this.moversToRemove.push(mover);
-            }
-        }
-        for (var i = 0; i < this.moversToRemove.length; i++) {
-            var mover = this.moversToRemove[i];
-            ArrayHelper.remove(this.movers, mover);
-        }
-    }
-    update_VictoryCheck() {
-        var factionNamesPresent = [];
-        var factionNamesPresentAsMap = new Map();
-        for (var i = 0; i < this.movers.length; i++) {
-            var mover = this.movers[i];
-            var moverFactionName = mover.factionName;
-            if (factionNamesPresentAsMap.has(moverFactionName) == false) {
-                factionNamesPresentAsMap.set(moverFactionName, moverFactionName);
-                factionNamesPresent.push(moverFactionName);
-                if (factionNamesPresent.length > 1) {
-                    break;
-                }
-            }
-        }
-        if (factionNamesPresent.length < 2) {
-            var factionNameVictorious = factionNamesPresent[0];
-            alert("The " + factionNameVictorious + " team wins!");
-        }
+        this.placeBattlefield.updateForTimerTick(universe, this);
     }
     // drawable
     draw(universe) {
-        var display = universe.display;
-        var world = this;
-        display.clear();
-        display.drawRectangle(Coords.Instances().Zeroes, display.sizeInPixels, Color.byName("White"), Color.byName("Gray"), null // areColorsReversed
-        );
-        var map = world.map;
-        map.draw(display);
-        var movers = this.movers;
-        for (var i = 0; i < movers.length; i++) {
-            var mover = movers[i];
-            mover.draw(universe, world, display, map, false // isMoverActive
-            );
-        }
-        var mover = world.moverActive();
-        mover.draw(universe, world, display, map, true // isMoverActive
-        );
-        var drawLoc = Disposition.create();
-        world.containerMain.draw(universe, display, drawLoc, null // style
-        );
+        this.placeBattlefield.draw(universe, this);
     }
     toControl() {
         return new ControlNone();
