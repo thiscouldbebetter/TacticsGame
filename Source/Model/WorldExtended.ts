@@ -1,13 +1,15 @@
 
 class WorldExtended extends World
 {
-	actions: Action2[];
+	actions: Action[];
+	actionToInputsMappings: ActionToInputsMapping[];
 	moverDefns: MoverDefn[];
 	map: MapOfTerrain;
 	factions: Faction[];
 	movers: Mover[];
 
-	actionsByName: Map<string, Action2>;
+	actionsByName: Map<string, Action>;
+	actionToInputsMappingsByInputName: Map<string, ActionToInputsMapping>;
 	containerMain: ControlContainer;
 	factionsByName: Map<string, Faction>;
 	indexOfMoverActive: number;
@@ -16,7 +18,8 @@ class WorldExtended extends World
 
 	constructor
 	(
-		actions: Action2[],
+		actions: Action[],
+		actionToInputsMappings: ActionToInputsMapping[],
 		moverDefns: MoverDefn[],
 		map: MapOfTerrain,
 		factions: Faction[],
@@ -32,12 +35,18 @@ class WorldExtended extends World
 		);
 
 		this.actions = actions;
+		this.actionToInputsMappings = actionToInputsMappings;
 		this.moverDefns = moverDefns;
 		this.map = map;
 		this.movers = movers;
 		this.factions = factions;
 
 		this.actionsByName = ArrayHelper.addLookupsByName(this.actions);
+		this.actionToInputsMappingsByInputName = ArrayHelper.addLookups
+		(
+			this.actionToInputsMappings,
+			(x: ActionToInputsMapping) => x.inputNames[0]
+		);
 		this.factionsByName = ArrayHelper.addLookupsByName(this.factions);
 		this.moverDefnsByName = ArrayHelper.addLookupsByName(this.moverDefns);
 
@@ -111,12 +120,12 @@ class WorldExtended extends World
 
 		var actions =
 		[
-			new Action2
+			new Action
 			(
 				"Attack",
-				"f", // keyCode
-				(universe: Universe, world: WorldExtended) => // perform
+				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
 				{
+					var world = worldAsWorld as WorldExtended;
 					var moverActive = world.moverActive();
 					if (moverActive.movePoints <= 0)
 					{
@@ -148,48 +157,48 @@ class WorldExtended extends World
 					}
 				}
 			),
-			new Action2
+			new Action
 			(
 				"Down",
-				"s", // keyCode
-				(universe: Universe, world: WorldExtended) => // perform
+				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
 				{
+					var world = worldAsWorld as WorldExtended;
 					actionMovePerform(universe, world, Coords.fromXY(0, 1));
 				}
 			),
-			new Action2
+			new Action
 			(
 				"Left",
-				"a", // keyCode
-				(universe: Universe, world: WorldExtended) => // perform
+				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
 				{
+					var world = worldAsWorld as WorldExtended;
 					actionMovePerform(universe, world, Coords.fromXY(-1, 0));
 				}
 			),
-			new Action2
+			new Action
 			(
 				"Right",
-				"d", // keyCode
-				(universe: Universe, world: WorldExtended) => // perform
+				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
 				{
+					var world = worldAsWorld as WorldExtended;
 					actionMovePerform(universe, world, Coords.fromXY(1, 0));
 				}
 			),
-			new Action2
+			new Action
 			(
 				"Up",
-				"w", // keyCode
-				(universe: Universe, world: WorldExtended) => // perform
+				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
 				{
+					var world = worldAsWorld as WorldExtended;
 					actionMovePerform(universe, world, Coords.fromXY(0, -1));
 				}
 			),
-			new Action2
+			new Action
 			(
 				"Pass",
-				"p", // keyCode
-				(universe: Universe, world: WorldExtended) => // perform
+				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
 				{
+					var world = worldAsWorld as WorldExtended;
 					var moverActive = world.moverActive();
 
 					moverActive.movePoints = 0;
@@ -198,6 +207,18 @@ class WorldExtended extends World
 		];
 
 		var actionNamesStandard = [ "Attack", "Up", "Down", "Left", "Right", "Pass" ];
+
+		var actionToInputsMappings =
+		[
+			ActionToInputsMapping.fromActionAndInputName("Attack", "f"),
+
+			ActionToInputsMapping.fromActionAndInputName("Up", "w"),
+			ActionToInputsMapping.fromActionAndInputName("Down", "s"),
+			ActionToInputsMapping.fromActionAndInputName("Left", "a"),
+			ActionToInputsMapping.fromActionAndInputName("Right", "d"),
+
+			ActionToInputsMapping.fromActionAndInputName("Pass", "p"),
+		];
 
 		var moverDefns =
 		[
@@ -319,6 +340,7 @@ class WorldExtended extends World
 		var world = new WorldExtended
 		(
 			actions,
+			actionToInputsMappings,
 			moverDefns,
 			map,
 			factions,
@@ -326,6 +348,11 @@ class WorldExtended extends World
 		);
 
 		return world;
+	}
+
+	actionByName(actionName: string): Action
+	{
+		return this.actionsByName.get(actionName);
 	}
 
 	moverActive(): Mover
@@ -415,7 +442,7 @@ class WorldExtended extends World
 					Coords.fromXY(10, 10), // pos
 					Coords.fromXY(70, 90), // size
 					// children
-					ControlHelper.toControlsMany
+					ActionHelper.actionsToControls
 					(
 						moverActive.defn(world).actionsAvailable(world),
 						Coords.fromXY(10, 10), // posFirst
@@ -519,18 +546,17 @@ class WorldExtended extends World
 			}
 			else
 			{
-				var moverActive = this.moverActive();
-				if (moverActive != null)
+				var mapping = this.actionToInputsMappingsByInputName.get(inputName);
+				if (mapping != null)
 				{
-					var moverActiveDefn = moverActive.defn(this);
-					var moverActions = moverActiveDefn.actionsAvailable(this);
-					for (var j = 0; j < moverActions.length; j++)
+					var moverActive = this.moverActive();
+					if (moverActive != null)
 					{
-						var moverAction = moverActions[j];
-						if (moverAction.key == inputName)
+						var moverActionName = mapping.actionName;
+						var moverAction = this.actionByName(moverActionName);
+						if (moverAction != null)
 						{
-							moverAction.perform(universe, this);
-							break;
+							moverAction.perform(universe, this, null, null);
 						}
 					}
 				}

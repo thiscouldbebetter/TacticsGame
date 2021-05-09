@@ -1,5 +1,0 @@
-
-interface Controllable
-{
-	toControl(): ControlBase
-}

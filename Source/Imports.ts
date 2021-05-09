@@ -1,6 +1,8 @@
 
 import gf = ThisCouldBeBetter.GameFramework;
 
+import Action = gf.Action;
+import ActionToInputsMapping = gf.ActionToInputsMapping;
 import ArrayHelper = gf.ArrayHelper;
 import Box = gf.Box;
 import CollisionHelper = gf.CollisionHelper;
@@ -18,7 +20,9 @@ import DateTime = gf.DateTime;
 import Display = gf.Display;
 import Display2D = gf.Display2D;
 import Disposition = gf.Disposition;
+import Entity = gf.Entity;
 import MediaLibrary = gf.MediaLibrary;
+import Place = gf.Place;
 import TimerHelper = gf.TimerHelper;
 import Universe = gf.Universe;
 import Venue = gf.Venue;

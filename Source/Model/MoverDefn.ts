@@ -29,7 +29,7 @@ class MoverDefn
 		this.actionNamesAvailable = actionNamesAvailable;
 	}
 
-	actionsAvailable(world: WorldExtended): Action2[]
+	actionsAvailable(world: WorldExtended): Action[]
 	{
 		var actionsAll = world.actionsByName;
 

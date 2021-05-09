@@ -1,15 +1,17 @@
 "use strict";
 class WorldExtended extends World {
-    constructor(actions, moverDefns, map, factions, movers) {
+    constructor(actions, actionToInputsMappings, moverDefns, map, factions, movers) {
         super("World", DateTime.now(), null, // defn
         [] // places
         );
         this.actions = actions;
+        this.actionToInputsMappings = actionToInputsMappings;
         this.moverDefns = moverDefns;
         this.map = map;
         this.movers = movers;
         this.factions = factions;
         this.actionsByName = ArrayHelper.addLookupsByName(this.actions);
+        this.actionToInputsMappingsByInputName = ArrayHelper.addLookups(this.actionToInputsMappings, (x) => x.inputNames[0]);
         this.factionsByName = ArrayHelper.addLookupsByName(this.factions);
         this.moverDefnsByName = ArrayHelper.addLookupsByName(this.moverDefns);
         this.moversToRemove = [];
@@ -44,9 +46,9 @@ class WorldExtended extends World {
             }
         };
         var actions = [
-            new Action2("Attack", "f", // keyCode
-            (universe, world) => // perform
+            new Action("Attack", (universe, worldAsWorld, p, e) => // perform
              {
+                var world = worldAsWorld;
                 var moverActive = world.moverActive();
                 if (moverActive.movePoints <= 0) {
                     return; // hack
@@ -63,34 +65,42 @@ class WorldExtended extends World {
                     moverActive.targetPos = null;
                 }
             }),
-            new Action2("Down", "s", // keyCode
-            (universe, world) => // perform
+            new Action("Down", (universe, worldAsWorld, p, e) => // perform
              {
+                var world = worldAsWorld;
                 actionMovePerform(universe, world, Coords.fromXY(0, 1));
             }),
-            new Action2("Left", "a", // keyCode
-            (universe, world) => // perform
+            new Action("Left", (universe, worldAsWorld, p, e) => // perform
              {
+                var world = worldAsWorld;
                 actionMovePerform(universe, world, Coords.fromXY(-1, 0));
             }),
-            new Action2("Right", "d", // keyCode
-            (universe, world) => // perform
+            new Action("Right", (universe, worldAsWorld, p, e) => // perform
              {
+                var world = worldAsWorld;
                 actionMovePerform(universe, world, Coords.fromXY(1, 0));
             }),
-            new Action2("Up", "w", // keyCode
-            (universe, world) => // perform
+            new Action("Up", (universe, worldAsWorld, p, e) => // perform
              {
+                var world = worldAsWorld;
                 actionMovePerform(universe, world, Coords.fromXY(0, -1));
             }),
-            new Action2("Pass", "p", // keyCode
-            (universe, world) => // perform
+            new Action("Pass", (universe, worldAsWorld, p, e) => // perform
              {
+                var world = worldAsWorld;
                 var moverActive = world.moverActive();
                 moverActive.movePoints = 0;
             }),
         ];
         var actionNamesStandard = ["Attack", "Up", "Down", "Left", "Right", "Pass"];
+        var actionToInputsMappings = [
+            ActionToInputsMapping.fromActionAndInputName("Attack", "f"),
+            ActionToInputsMapping.fromActionAndInputName("Up", "w"),
+            ActionToInputsMapping.fromActionAndInputName("Down", "s"),
+            ActionToInputsMapping.fromActionAndInputName("Left", "a"),
+            ActionToInputsMapping.fromActionAndInputName("Right", "d"),
+            ActionToInputsMapping.fromActionAndInputName("Pass", "p"),
+        ];
         var moverDefns = [
             new MoverDefn("Slugger", "A", 3, // integrityMax
             1, // movePointsPerTurn
@@ -162,8 +172,11 @@ class WorldExtended extends World {
             Coords.fromXY(5, 1) // pos
             ),
         ];
-        var world = new WorldExtended(actions, moverDefns, map, factions, movers);
+        var world = new WorldExtended(actions, actionToInputsMappings, moverDefns, map, factions, movers);
         return world;
+    }
+    actionByName(actionName) {
+        return this.actionsByName.get(actionName);
     }
     moverActive() {
         var returnValue = null;
@@ -219,7 +232,7 @@ class WorldExtended extends World {
             ControlContainer.from4("containerActions", Coords.fromXY(10, 10), // pos
             Coords.fromXY(70, 90), // size
             // children
-            ControlHelper.toControlsMany(moverActive.defn(world).actionsAvailable(world), Coords.fromXY(10, 10), // posFirst
+            ActionHelper.actionsToControls(moverActive.defn(world).actionsAvailable(world), Coords.fromXY(10, 10), // posFirst
             Coords.fromXY(0, 12) // spacing
             )),
             ControlContainer.from4("containerSelection", Coords.fromXY(10, 110), // pos
@@ -266,15 +279,14 @@ class WorldExtended extends World {
                 this.containerMain.mouseClick(inputHelper.mouseClickPos);
             }
             else {
-                var moverActive = this.moverActive();
-                if (moverActive != null) {
-                    var moverActiveDefn = moverActive.defn(this);
-                    var moverActions = moverActiveDefn.actionsAvailable(this);
-                    for (var j = 0; j < moverActions.length; j++) {
-                        var moverAction = moverActions[j];
-                        if (moverAction.key == inputName) {
-                            moverAction.perform(universe, this);
-                            break;
+                var mapping = this.actionToInputsMappingsByInputName.get(inputName);
+                if (mapping != null) {
+                    var moverActive = this.moverActive();
+                    if (moverActive != null) {
+                        var moverActionName = mapping.actionName;
+                        var moverAction = this.actionByName(moverActionName);
+                        if (moverAction != null) {
+                            moverAction.perform(universe, this, null, null);
                         }
                     }
                 }
