@@ -9,7 +9,9 @@ class ActionHelper
 			Coords.create(), // pos
 			Coords.fromXY(50, 12), // size
 			action.name,
-			10, true, true, // fontHeight, hasBorder, isEnabled
+			10, // fontHeight
+			true, // hasBorder
+			DataBinding.fromTrue(), // isEnabled
 			action.perform.bind(this)
 		);
 

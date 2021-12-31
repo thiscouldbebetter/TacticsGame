@@ -34,8 +34,7 @@ class MapOfTerrain {
                 var cellTerrain = map.terrainAtPos(cellPos);
                 drawPos.overwriteWith(cellPos).multiply(mapCellSizeInPixels).add(map.pos);
                 display.drawRectangle(drawPos, mapCellSizeInPixels, cellTerrain.color, // fill
-                Color.byName("Gray"), // border
-                null // areColorsReversed
+                Color.byName("Gray") // border
                 );
             }
         }

@@ -5,7 +5,7 @@ class Game {
         // deserialization of existing saved items after the schema changes.
         // localStorage.clear();
         var mediaFilePaths = this.mediaFilePathsBuild();
-        var mediaLibrary = MediaLibrary.fromFilePaths(mediaFilePaths);
+        var mediaLibrary = MediaLibrary.fromFilePaths("../Content", mediaFilePaths);
         var displaySizesAvailable = [
             new Coords(400, 300, 1),
             new Coords(640, 480, 1),
@@ -20,8 +20,9 @@ class Game {
         null);
         var timerHelper = new TimerHelper(20);
         var controlBuilder = ControlBuilder.default();
-        var universe = Universe.create("Tactics Game", "0.0.0-20210508", // version
-        timerHelper, display, mediaLibrary, controlBuilder, (u) => WorldExtended.create());
+        var worldCreator = WorldCreator.fromWorldCreate(WorldExtended.create);
+        var universe = Universe.create("Tactics Game", "0.0.0-20211230", // version
+        timerHelper, display, mediaLibrary, controlBuilder, worldCreator);
         universe.initialize(() => universe.start());
     }
     mediaFilePathsBuild() {

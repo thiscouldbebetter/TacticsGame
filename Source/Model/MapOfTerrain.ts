@@ -17,7 +17,9 @@ class MapOfTerrain
 
 	constructor
 	(
-		cellSizeInPixels: Coords, pos: Coords, terrains: MapTerrain[],
+		cellSizeInPixels: Coords,
+		pos: Coords,
+		terrains: MapTerrain[],
 		cellsAsStrings: string[]
 	)
 	{
@@ -95,8 +97,7 @@ class MapOfTerrain
 					drawPos,
 					mapCellSizeInPixels,
 					cellTerrain.color, // fill
-					Color.byName("Gray"), // border
-					null // areColorsReversed
+					Color.byName("Gray") // border
 				);
 			}
 		}

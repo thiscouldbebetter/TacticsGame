@@ -15,8 +15,8 @@ class WorldExtended extends World {
         this.moverDefnsByName = ArrayHelper.addLookupsByName(this.moverDefns);
     }
     static create() {
-        var actionMovePerform = (universe, worldAsWorld, direction) => {
-            var world = worldAsWorld;
+        var actionMovePerform = (uwpe, direction) => {
+            var world = uwpe.world;
             var place = world.placeBattlefield;
             var map = place.map;
             var moverActive = place.moverActive();
@@ -45,10 +45,11 @@ class WorldExtended extends World {
                 }
             }
         };
+        var directions = Direction.Instances();
         var actions = [
-            new Action("Attack", (universe, worldAsWorld, p, e) => // perform
+            new Action("Attack", (uwpe) => // perform
              {
-                var world = worldAsWorld;
+                var world = uwpe.world;
                 var place = world.placeBattlefield;
                 var moverActive = place.moverActive();
                 if (moverActive.movePoints <= 0) {
@@ -66,41 +67,37 @@ class WorldExtended extends World {
                     moverActive.targetPos = null;
                 }
             }),
-            new Action("Down", (universe, worldAsWorld, p, e) => // perform
+            new Action("South", (uwpe) => // perform
              {
-                var world = worldAsWorld;
-                actionMovePerform(universe, world, Coords.fromXY(0, 1));
+                actionMovePerform(uwpe, directions.South);
             }),
-            new Action("Left", (universe, worldAsWorld, p, e) => // perform
+            new Action("West", (uwpe) => // perform
              {
-                var world = worldAsWorld;
-                actionMovePerform(universe, world, Coords.fromXY(-1, 0));
+                actionMovePerform(uwpe, directions.West);
             }),
-            new Action("Right", (universe, worldAsWorld, p, e) => // perform
+            new Action("East", (uwpe) => // perform
              {
-                var world = worldAsWorld;
-                actionMovePerform(universe, world, Coords.fromXY(1, 0));
+                actionMovePerform(uwpe, directions.East);
             }),
-            new Action("Up", (universe, worldAsWorld, p, e) => // perform
+            new Action("North", (uwpe) => // perform
              {
-                var world = worldAsWorld;
-                actionMovePerform(universe, world, Coords.fromXY(0, -1));
+                actionMovePerform(uwpe, directions.North);
             }),
-            new Action("Pass", (universe, worldAsWorld, p, e) => // perform
+            new Action("Pass", (uwpe) => // perform
              {
-                var world = worldAsWorld;
+                var world = uwpe.world;
                 var place = world.placeBattlefield;
                 var moverActive = place.moverActive();
                 moverActive.movePoints = 0;
             }),
         ];
-        var actionNamesStandard = ["Attack", "Up", "Down", "Left", "Right", "Pass"];
+        var actionNamesStandard = ["Attack", "North", "South", "West", "East", "Pass"];
         var actionToInputsMappings = [
             new ActionToInputsMapping("Attack", ["f"], true),
-            new ActionToInputsMapping("Up", ["w"], true),
-            new ActionToInputsMapping("Down", ["s"], true),
-            new ActionToInputsMapping("Left", ["a"], true),
-            new ActionToInputsMapping("Right", ["d"], true),
+            new ActionToInputsMapping("North", ["w"], true),
+            new ActionToInputsMapping("South", ["s"], true),
+            new ActionToInputsMapping("West", ["a"], true),
+            new ActionToInputsMapping("East", ["d"], true),
             new ActionToInputsMapping("Pass", ["p"], true),
         ];
         var moverDefns = [
@@ -181,15 +178,17 @@ class WorldExtended extends World {
     actionByName(actionName) {
         return this.actionsByName.get(actionName);
     }
-    initialize(universe) {
-        this.placeBattlefield.initialize(universe, this);
+    initialize(uwpe) {
+        uwpe.worldSet(this);
+        this.placeBattlefield.initialize(uwpe);
     }
-    updateForTimerTick(universe) {
-        this.placeBattlefield.updateForTimerTick(universe, this);
+    updateForTimerTick(uwpe) {
+        uwpe.worldSet(this);
+        this.placeBattlefield.updateForTimerTick(uwpe);
     }
     // drawable
     draw(universe) {
-        this.placeBattlefield.draw(universe, this);
+        this.placeBattlefield.draw(universe, this, universe.display);
     }
     toControl() {
         return new ControlNone();

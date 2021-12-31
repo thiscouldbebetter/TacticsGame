@@ -4,7 +4,9 @@ class ActionHelper {
         var returnValue = ControlButton.from8("button" + action.name, // name
         Coords.create(), // pos
         Coords.fromXY(50, 12), // size
-        action.name, 10, true, true, // fontHeight, hasBorder, isEnabled
+        action.name, 10, // fontHeight
+        true, // hasBorder
+        DataBinding.fromTrue(), // isEnabled
         action.perform.bind(this));
         return returnValue;
     }

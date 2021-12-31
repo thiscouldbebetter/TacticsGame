@@ -47,9 +47,9 @@ class WorldExtended extends World
 
 	static create(): WorldExtended
 	{
-		var actionMovePerform = (universe: Universe, worldAsWorld: World, direction: Coords) =>
+		var actionMovePerform = (uwpe: UniverseWorldPlaceEntities, direction: Coords) =>
 		{
-			var world = worldAsWorld as WorldExtended;
+			var world = uwpe.world as WorldExtended;
 			var place = world.placeBattlefield;
 			var map = place.map;
 
@@ -113,14 +113,16 @@ class WorldExtended extends World
 			}
 		};
 
+		var directions = Direction.Instances();
+
 		var actions =
 		[
 			new Action
 			(
 				"Attack",
-				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
+				(uwpe: UniverseWorldPlaceEntities) => // perform
 				{
-					var world = worldAsWorld as WorldExtended;
+					var world = uwpe.world as WorldExtended;
 					var place = world.placeBattlefield;
 					var moverActive = place.moverActive();
 					if (moverActive.movePoints <= 0)
@@ -155,46 +157,42 @@ class WorldExtended extends World
 			),
 			new Action
 			(
-				"Down",
-				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
+				"South",
+				(uwpe: UniverseWorldPlaceEntities) => // perform
 				{
-					var world = worldAsWorld as WorldExtended;
-					actionMovePerform(universe, world, Coords.fromXY(0, 1));
+					actionMovePerform(uwpe, directions.South);
 				}
 			),
 			new Action
 			(
-				"Left",
-				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
+				"West",
+				(uwpe: UniverseWorldPlaceEntities) => // perform
 				{
-					var world = worldAsWorld as WorldExtended;
-					actionMovePerform(universe, world, Coords.fromXY(-1, 0));
+					actionMovePerform(uwpe, directions.West);
 				}
 			),
 			new Action
 			(
-				"Right",
-				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
+				"East",
+				(uwpe: UniverseWorldPlaceEntities) => // perform
 				{
-					var world = worldAsWorld as WorldExtended;
-					actionMovePerform(universe, world, Coords.fromXY(1, 0));
+					actionMovePerform(uwpe, directions.East);
 				}
 			),
 			new Action
 			(
-				"Up",
-				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
+				"North",
+				(uwpe: UniverseWorldPlaceEntities) => // perform
 				{
-					var world = worldAsWorld as WorldExtended;
-					actionMovePerform(universe, world, Coords.fromXY(0, -1));
+					actionMovePerform(uwpe, directions.North);
 				}
 			),
 			new Action
 			(
 				"Pass",
-				(universe: Universe, worldAsWorld: World, p: Place, e: Entity) => // perform
+				(uwpe: UniverseWorldPlaceEntities) => // perform
 				{
-					var world = worldAsWorld as WorldExtended;
+					var world = uwpe.world as WorldExtended;
 					var place = world.placeBattlefield;
 					var moverActive = place.moverActive();
 
@@ -203,16 +201,16 @@ class WorldExtended extends World
 			),
 		];
 
-		var actionNamesStandard = [ "Attack", "Up", "Down", "Left", "Right", "Pass" ];
+		var actionNamesStandard = [ "Attack", "North", "South", "West", "East", "Pass" ];
 
 		var actionToInputsMappings =
 		[
 			new ActionToInputsMapping("Attack", [ "f" ], true),
 
-			new ActionToInputsMapping("Up", [ "w" ], true),
-			new ActionToInputsMapping("Down", [ "s" ], true),
-			new ActionToInputsMapping("Left", [ "a" ], true),
-			new ActionToInputsMapping("Right", [ "d" ], true),
+			new ActionToInputsMapping("North", [ "w" ], true),
+			new ActionToInputsMapping("South", [ "s" ], true),
+			new ActionToInputsMapping("West", [ "a" ], true),
+			new ActionToInputsMapping("East", [ "d" ], true),
  
 			new ActionToInputsMapping("Pass", [ "p" ], true),
 		];
@@ -353,21 +351,23 @@ class WorldExtended extends World
 		return this.actionsByName.get(actionName);
 	}
 
-	initialize(universe: Universe): void
+	initialize(uwpe: UniverseWorldPlaceEntities): void
 	{
-		this.placeBattlefield.initialize(universe, this);
+		uwpe.worldSet(this);
+		this.placeBattlefield.initialize(uwpe);
 	}
 
-	updateForTimerTick(universe: Universe): void
+	updateForTimerTick(uwpe: UniverseWorldPlaceEntities): void
 	{
-		this.placeBattlefield.updateForTimerTick(universe, this);
+		uwpe.worldSet(this);
+		this.placeBattlefield.updateForTimerTick(uwpe);
 	}
 
 	// drawable
 
 	draw(universe: Universe): void
 	{
-		this.placeBattlefield.draw(universe, this);
+		this.placeBattlefield.draw(universe, this, universe.display);
 	}
 
 	toControl(): ControlBase

@@ -10,7 +10,7 @@ class PlaceBattlefield extends Place
 
 	constructor(map: MapOfTerrain, movers: Mover[])
 	{
-		super(PlaceBattlefield.name, null, null, []);
+		super(PlaceBattlefield.name, null, null, null, []);
 
 		this.map = map;
 		this.movers = movers;
@@ -18,16 +18,16 @@ class PlaceBattlefield extends Place
 		this.moversToRemove = [];
 	}
 
-	draw(universe: Universe, world: WorldExtended): void
+	draw(universe: Universe, worldAsWorld: World, display: Display): void
 	{
-		var display = universe.display;
+		var world = worldAsWorld as WorldExtended;
+
 		display.clear();
 
-		display.drawRectangle
+		display.drawBackground
 		(
-			Coords.Instances().Zeroes, display.sizeInPixels,
-			Color.byName("White"), Color.byName("Gray"),
-			null // areColorsReversed
+			Color.byName("White"),
+			Color.byName("Gray")
 		)
 
 		var map = this.map;
@@ -122,8 +122,12 @@ class PlaceBattlefield extends Place
 
 	// Place.
 
-	initialize(universe: Universe, world: WorldExtended): void
+	initialize(uwpe: UniverseWorldPlaceEntities): void
 	{
+		uwpe.placeSet(this);
+
+		var universe = uwpe.universe;
+		var world = uwpe.world as WorldExtended;
 		var place = this;
 
 		for (var i = 0; i < this.movers.length; i++)
@@ -133,6 +137,8 @@ class PlaceBattlefield extends Place
 		}
 
 		var moverActive = this.moverActiveAdvanceIfNeeded(world);
+
+		var fontHeightInPixels = 10;
 
 		this.containerMain = ControlContainer.from4
 		(
@@ -161,27 +167,30 @@ class PlaceBattlefield extends Place
 					Coords.fromXY(70, 60), // size
 					// children
 					[
-						ControlLabel.fromPosAndText
+						ControlLabel.fromPosHeightAndText
 						(
 							Coords.fromXY(5, 5), // pos
+							fontHeightInPixels,
 							DataBinding.fromGet
 							(
 								(c: any) => place.moverActive().factionName
 							)
 						),
 
-						ControlLabel.fromPosAndText
+						ControlLabel.fromPosHeightAndText
 						(
 							Coords.fromXY(5, 15), // pos
+							fontHeightInPixels,
 							DataBinding.fromGet
 							(
 								(c: any) => place.moverActive().defnName
 							)
 						),
 
-						ControlLabel.fromPosAndText
+						ControlLabel.fromPosHeightAndText
 						(
 							Coords.fromXY(5, 25), // pos
+							fontHeightInPixels,
 							DataBinding.fromGet
 							(
 								(c: any) =>
@@ -193,9 +202,10 @@ class PlaceBattlefield extends Place
 							)
 						),
 
-						ControlLabel.fromPosAndText
+						ControlLabel.fromPosHeightAndText
 						(
 							Coords.fromXY(5, 35), // pos
+							fontHeightInPixels,
 							DataBinding.fromGet
 							(
 								(c: any) =>
@@ -215,24 +225,29 @@ class PlaceBattlefield extends Place
 			]
 		);
 
-		this.updateForTimerTick(universe, world);
+		this.updateForTimerTick(uwpe);
 	}
 
-	updateForTimerTick(universe: Universe, world: WorldExtended): void
+	updateForTimerTick(uwpe: UniverseWorldPlaceEntities): void
 	{
-		this.update_Input(universe, world);
+		uwpe.placeSet(this);
+
+		this.update_Input(uwpe);
 
 		this.update_MoversIntegrityCheck();
 
-		this.moverActiveAdvanceIfNeeded(world);
+		this.moverActiveAdvanceIfNeeded(uwpe.world as WorldExtended);
 
 		this.update_VictoryCheck();
 
-		this.draw(universe, world);
+		this.draw(uwpe.universe, uwpe.world, uwpe.universe.display);
 	}
 
-	update_Input(universe: Universe, world: WorldExtended): void
+	update_Input(uwpe: UniverseWorldPlaceEntities): void
 	{
+		var universe = uwpe.universe;
+		var world = uwpe.world as WorldExtended;
+
 		var inputHelper = universe.inputHelper;
 
 		var inputsPressed = inputHelper.inputsPressed;
@@ -245,7 +260,7 @@ class PlaceBattlefield extends Place
 			}
 			else if (inputName == "MouseClick")
 			{
-				inputHelper.isMouseClicked(false);
+				inputHelper.mouseClickedSet(false);
 				this.containerMain.mouseClick
 				(
 					inputHelper.mouseClickPos
@@ -280,7 +295,7 @@ class PlaceBattlefield extends Place
 					for (var a = 0; a < actionsFromInput.length; a++)
 					{
 						var action = actionsFromInput[a];
-						action.perform(universe, world, this, null);
+						action.perform(uwpe);
 					}
 				}
 			}
