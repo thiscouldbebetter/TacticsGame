@@ -53,7 +53,7 @@ class PlaceBattlefield extends Place {
         var returnValue = null;
         for (var i = 0; i < this.movers.length; i++) {
             var mover = this.movers[i];
-            if (mover.pos.equals(posToCheck)) {
+            if (mover.locatable().loc.pos.equals(posToCheck)) {
                 returnValue = mover;
                 break;
             }
@@ -69,12 +69,11 @@ class PlaceBattlefield extends Place {
     // Place.
     initialize(uwpe) {
         uwpe.placeSet(this);
-        var universe = uwpe.universe;
         var world = uwpe.world;
         var place = this;
         for (var i = 0; i < this.movers.length; i++) {
             var mover = this.movers[i];
-            mover.initialize(universe, world);
+            mover.initialize(uwpe);
         }
         var moverActive = this.moverActiveAdvanceIfNeeded(world);
         var fontHeightInPixels = 10;
@@ -98,8 +97,7 @@ class PlaceBattlefield extends Place {
                 ControlLabel.fromPosHeightAndText(Coords.fromXY(5, 25), // pos
                 fontHeightInPixels, DataBinding.fromGet((c) => {
                     var moverActive = place.moverActive();
-                    var moverDefn = moverActive.defn(world);
-                    return "Health:" + moverActive.integrity + "/" + moverDefn.integrityMax;
+                    return "Health:" + moverActive.killable().integrityCurrentOverMax();
                 })),
                 ControlLabel.fromPosHeightAndText(Coords.fromXY(5, 35), // pos
                 fontHeightInPixels, DataBinding.fromGet((c) => {
@@ -167,7 +165,7 @@ class PlaceBattlefield extends Place {
         this.moversToRemove.length = 0;
         for (var i = 0; i < this.movers.length; i++) {
             var mover = this.movers[i];
-            if (mover.integrity <= 0) {
+            if (mover.killable().integrity <= 0) {
                 this.moversToRemove.push(mover);
             }
         }

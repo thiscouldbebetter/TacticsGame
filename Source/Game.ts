@@ -38,7 +38,7 @@ class Game
 		var universe = Universe.create
 		(
 			"Tactics Game",
-			"0.0.0-20211230", // version
+			"0.0.0-20220212", // version
 			timerHelper,
 			display,
 			mediaLibrary,
@@ -67,6 +67,8 @@ class Game
 			imageDirectoryPath + "Opening.png",
 			imageDirectoryPath + "Producer.png",
 			imageDirectoryPath + "Title.png",
+
+			imageDirectoryPath + "Movers/Pawn-Gray.png",
 
 			soundEffectDirectoryPath + "Sound.wav",
 			soundEffectDirectoryPath + "Clang.wav",

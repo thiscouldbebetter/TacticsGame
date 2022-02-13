@@ -21,7 +21,7 @@ class Game {
         var timerHelper = new TimerHelper(20);
         var controlBuilder = ControlBuilder.default();
         var worldCreator = WorldCreator.fromWorldCreate(WorldExtended.create);
-        var universe = Universe.create("Tactics Game", "0.0.0-20211230", // version
+        var universe = Universe.create("Tactics Game", "0.0.0-20220212", // version
         timerHelper, display, mediaLibrary, controlBuilder, worldCreator);
         universe.initialize(() => universe.start());
     }
@@ -37,6 +37,7 @@ class Game {
             imageDirectoryPath + "Opening.png",
             imageDirectoryPath + "Producer.png",
             imageDirectoryPath + "Title.png",
+            imageDirectoryPath + "Movers/Pawn-Gray.png",
             soundEffectDirectoryPath + "Sound.wav",
             soundEffectDirectoryPath + "Clang.wav",
             soundMusicDirectoryPath + "Music.mp3",

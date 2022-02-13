@@ -20,25 +20,27 @@ class WorldExtended extends World {
             var place = world.placeBattlefield;
             var map = place.map;
             var moverActive = place.moverActive();
+            var moverActiveLoc = moverActive.locatable().loc;
+            var moverPos = moverActiveLoc.pos;
             var targetPos = moverActive.targetPos;
             if (targetPos == null) {
-                var moverOrientation = moverActive.orientation;
-                if (moverOrientation.equals(direction)) {
-                    var moverPosNext = moverActive.pos.clone().add(direction).trimToRangeMax(map.sizeInCellsMinusOnes);
+                var moverForward = moverActiveLoc.orientation.forward;
+                if (moverForward.equals(direction)) {
+                    var moverPosNext = moverPos.clone().add(direction).trimToRangeMax(map.sizeInCellsMinusOnes);
                     var terrain = map.terrainAtPos(moverPosNext);
                     var movePointsToTraverse = terrain.movePointsToTraverse;
                     if (moverActive.movePoints >= movePointsToTraverse) {
                         if (place.moverAtPos(moverPosNext) == null) {
-                            moverActive.pos.overwriteWith(moverPosNext);
+                            moverPos.overwriteWith(moverPosNext);
                             moverActive.movePoints -= movePointsToTraverse;
                         }
                     }
                 }
-                moverOrientation.overwriteWith(direction);
+                moverForward.overwriteWith(direction);
             }
             else {
                 var targetPosNext = targetPos.clone().add(direction).trimToRangeMax(map.sizeInCellsMinusOnes);
-                var targetDisplacementNext = targetPosNext.clone().subtract(moverActive.pos);
+                var targetDisplacementNext = targetPosNext.clone().subtract(moverPos);
                 var targetDistanceNext = targetDisplacementNext.magnitude();
                 if (targetDistanceNext <= moverActive.defn(world).attackRange) {
                     targetPos.overwriteWith(targetPosNext);
@@ -55,13 +57,15 @@ class WorldExtended extends World {
                 if (moverActive.movePoints <= 0) {
                     return; // hack
                 }
+                var moverLoc = moverActive.locatable().loc;
+                var moverPos = moverLoc.pos;
                 if (moverActive.targetPos == null) {
-                    moverActive.targetPos = moverActive.pos.clone().add(moverActive.orientation);
+                    moverActive.targetPos = moverPos.clone().add(moverLoc.orientation.forward);
                 }
                 else {
                     var moverTarget = place.moverAtPos(moverActive.targetPos);
                     if (moverTarget != null) {
-                        moverTarget.integrity -= moverActive.defn(world).attackDamage;
+                        moverTarget.killable().integritySubtract(moverActive.defn(world).attackDamage);
                     }
                     moverActive.movePoints = 0;
                     moverActive.targetPos = null;
@@ -105,17 +109,17 @@ class WorldExtended extends World {
             1, // movePointsPerTurn
             1, // attackRange
             2, // attackDamage
-            actionNamesStandard),
+            actionNamesStandard, new VisualImageFromLibrary("Movers_Pawn-Gray")),
             new MoverDefn("Sniper", "B", 2, // integrityMax
             1, // movePointsPerTurn
             3, // attackRange
             1, // attackDamage
-            actionNamesStandard),
+            actionNamesStandard, new VisualImageFromLibrary("Movers_Pawn-Gray")),
             new MoverDefn("Sprinter", "C", 1, // integrityMax
             3, // movePointsPerTurn
             1, // attackRange
             1, // attackDamage
-            actionNamesStandard),
+            actionNamesStandard, new VisualImageFromLibrary("Movers_Pawn-Gray")),
         ];
         var mapTerrains = [
             new MapTerrain("Open", ".", 1, Color.byName("GreenDark")),
@@ -142,33 +146,32 @@ class WorldExtended extends World {
         var movers = [
             new Mover("Slugger", // defnName
             "Blue", // factionName
-            Coords.fromXY(1, 0), // orientation
-            Coords.fromXY(1, 1) // pos
+            Coords.fromXY(1, 1), // pos
+            Coords.fromXY(1, 0) // orientation
             ),
             new Mover("Sniper", // defnName
             "Blue", // factionName
-            Coords.fromXY(1, 0), // orientation
-            Coords.fromXY(3, 1) // pos
+            Coords.fromXY(3, 1), // pos
+            Coords.fromXY(1, 0) // orientation
             ),
             new Mover("Sprinter", // defnName
             "Blue", // factionName
-            Coords.fromXY(1, 0), // orientation
-            Coords.fromXY(1, 3) // pos
+            Coords.fromXY(1, 3), // pos
+            Coords.fromXY(1, 0) // orientation
             ),
             new Mover("Slugger", // defnName
             "Red", // factionName
-            Coords.fromXY(1, 0), // orientation
-            Coords.fromXY(5, 3) // pos
+            Coords.fromXY(5, 3), // pos
+            Coords.fromXY(1, 0) // orientation
             ),
             new Mover("Sniper", // defnName
             "Red", // factionName
-            Coords.fromXY(1, 0), // orientation
-            Coords.fromXY(3, 3) // pos
-            ),
+            Coords.fromXY(3, 3), // pos
+            Coords.fromXY(1, 0)),
             new Mover("Sprinter", // defnName
             "Red", // factionName
-            Coords.fromXY(1, 0), // orientation
-            Coords.fromXY(5, 1) // pos
+            Coords.fromXY(5, 1), // pos
+            Coords.fromXY(1, 0) // orientation
             ),
         ];
         var placeBattlefield = new PlaceBattlefield(map, movers);

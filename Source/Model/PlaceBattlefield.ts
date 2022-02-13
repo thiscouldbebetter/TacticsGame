@@ -40,7 +40,9 @@ class PlaceBattlefield extends Place
 			var mover = movers[i];
 			mover.draw
 			(
-				universe, world, display, map, false // isMoverActive
+				universe,
+				world,
+				display, map, false // isMoverActive
 			);
 		}
 
@@ -101,7 +103,7 @@ class PlaceBattlefield extends Place
 		for (var i = 0; i < this.movers.length; i++)
 		{
 			var mover = this.movers[i];
-			if (mover.pos.equals(posToCheck) )
+			if (mover.locatable().loc.pos.equals(posToCheck) )
 			{
 				returnValue = mover;
 				break;
@@ -126,14 +128,14 @@ class PlaceBattlefield extends Place
 	{
 		uwpe.placeSet(this);
 
-		var universe = uwpe.universe;
 		var world = uwpe.world as WorldExtended;
+
 		var place = this;
 
 		for (var i = 0; i < this.movers.length; i++)
 		{
 			var mover = this.movers[i];
-			mover.initialize(universe, world);
+			mover.initialize(uwpe);
 		}
 
 		var moverActive = this.moverActiveAdvanceIfNeeded(world);
@@ -196,8 +198,7 @@ class PlaceBattlefield extends Place
 								(c: any) =>
 								{
 									var moverActive = place.moverActive();
-									var moverDefn = moverActive.defn(world);
-									return "Health:" + moverActive.integrity + "/" + moverDefn.integrityMax;
+									return "Health:" + moverActive.killable().integrityCurrentOverMax();
 								}
 							)
 						),
@@ -309,7 +310,7 @@ class PlaceBattlefield extends Place
 		for (var i = 0; i < this.movers.length; i++)
 		{
 			var mover = this.movers[i];
-			if (mover.integrity <= 0)
+			if (mover.killable().integrity <= 0)
 			{
 				this.moversToRemove.push(mover);
 			}

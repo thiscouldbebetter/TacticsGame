@@ -8,6 +8,7 @@ class MoverDefn
 	attackRange: number;
 	attackDamage: number;
 	actionNamesAvailable: string[];
+	visual: VisualBase;
 
 	constructor
 	(
@@ -17,7 +18,8 @@ class MoverDefn
 		movePointsPerTurn: number,
 		attackRange: number,
 		attackDamage: number,
-		actionNamesAvailable: string[]
+		actionNamesAvailable: string[],
+		visual: VisualBase
 	)
 	{
 		this.name = name;
@@ -27,6 +29,7 @@ class MoverDefn
 		this.attackRange = attackRange;
 		this.attackDamage = attackDamage;
 		this.actionNamesAvailable = actionNamesAvailable;
+		this.visual = visual;
 	}
 
 	actionsAvailable(world: WorldExtended): Action[]

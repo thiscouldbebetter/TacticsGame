@@ -1,6 +1,6 @@
 "use strict";
 class MoverDefn {
-    constructor(name, codeChar, integrityMax, movePointsPerTurn, attackRange, attackDamage, actionNamesAvailable) {
+    constructor(name, codeChar, integrityMax, movePointsPerTurn, attackRange, attackDamage, actionNamesAvailable, visual) {
         this.name = name;
         this.codeChar = codeChar;
         this.integrityMax = integrityMax;
@@ -8,6 +8,7 @@ class MoverDefn {
         this.attackRange = attackRange;
         this.attackDamage = attackDamage;
         this.actionNamesAvailable = actionNamesAvailable;
+        this.visual = visual;
     }
     actionsAvailable(world) {
         var actionsAll = world.actionsByName;

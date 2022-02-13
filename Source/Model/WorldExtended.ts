@@ -54,15 +54,17 @@ class WorldExtended extends World
 			var map = place.map;
 
 			var moverActive = place.moverActive();
+			var moverActiveLoc = moverActive.locatable().loc;
+			var moverPos = moverActiveLoc.pos;
+
 			var targetPos = moverActive.targetPos;
 			if (targetPos == null)
 			{
-				var moverOrientation = moverActive.orientation;
+				var moverForward = moverActiveLoc.orientation.forward;
 
-				if (moverOrientation.equals(direction) )
+				if (moverForward.equals(direction) )
 				{
-
-					var moverPosNext = moverActive.pos.clone().add
+					var moverPosNext = moverPos.clone().add
 					(
 						direction
 					).trimToRangeMax
@@ -76,7 +78,7 @@ class WorldExtended extends World
 					{
 						if (place.moverAtPos(moverPosNext) == null)
 						{
-							moverActive.pos.overwriteWith
+							moverPos.overwriteWith
 							(
 								moverPosNext
 							);
@@ -85,7 +87,7 @@ class WorldExtended extends World
 					}
 				}
 
-				moverOrientation.overwriteWith
+				moverForward.overwriteWith
 				(
 					direction
 				);
@@ -102,7 +104,7 @@ class WorldExtended extends World
 
 				var targetDisplacementNext = targetPosNext.clone().subtract
 				(
-					moverActive.pos
+					moverPos
 				);
 
 				var targetDistanceNext = targetDisplacementNext.magnitude();
@@ -130,11 +132,14 @@ class WorldExtended extends World
 						return; // hack
 					}
 
+					var moverLoc = moverActive.locatable().loc;
+					var moverPos = moverLoc.pos;
+
 					if (moverActive.targetPos == null)
 					{
-						moverActive.targetPos = moverActive.pos.clone().add
+						moverActive.targetPos = moverPos.clone().add
 						(
-							moverActive.orientation
+							moverLoc.orientation.forward
 						);
 					}
 					else
@@ -146,7 +151,10 @@ class WorldExtended extends World
 
 						if (moverTarget != null)
 						{
-							moverTarget.integrity -= moverActive.defn(world).attackDamage;
+							moverTarget.killable().integritySubtract
+							(
+								moverActive.defn(world).attackDamage
+							);
 						}
 
 						moverActive.movePoints = 0;
@@ -225,7 +233,8 @@ class WorldExtended extends World
 				1, // movePointsPerTurn
 				1, // attackRange
 				2, // attackDamage
-				actionNamesStandard
+				actionNamesStandard,
+				new VisualImageFromLibrary("Movers_Pawn-Gray")
 			),
 
 			new MoverDefn
@@ -236,7 +245,8 @@ class WorldExtended extends World
 				1, // movePointsPerTurn
 				3, // attackRange
 				1, // attackDamage
-				actionNamesStandard
+				actionNamesStandard,
+				new VisualImageFromLibrary("Movers_Pawn-Gray")
 			),
 
 			new MoverDefn
@@ -247,7 +257,8 @@ class WorldExtended extends World
 				3, // movePointsPerTurn
 				1, // attackRange
 				1, // attackDamage
-				actionNamesStandard
+				actionNamesStandard,
+				new VisualImageFromLibrary("Movers_Pawn-Gray")
 			),
 		];
 
@@ -287,48 +298,48 @@ class WorldExtended extends World
 			(
 				"Slugger", // defnName
 				"Blue", // factionName
-				Coords.fromXY(1, 0), // orientation
-				Coords.fromXY(1, 1) // pos
+				Coords.fromXY(1, 1), // pos
+				Coords.fromXY(1, 0) // orientation
 			),
 
 			new Mover
 			(
 				"Sniper", // defnName
 				"Blue", // factionName
-				Coords.fromXY(1, 0), // orientation
-				Coords.fromXY(3, 1) // pos
+				Coords.fromXY(3, 1), // pos
+				Coords.fromXY(1, 0) // orientation
 			),
 
 			new Mover
 			(
 				"Sprinter", // defnName
 				"Blue", // factionName
-				Coords.fromXY(1, 0), // orientation
-				Coords.fromXY(1, 3) // pos
+				Coords.fromXY(1, 3), // pos
+				Coords.fromXY(1, 0) // orientation
 			),
 
 			new Mover
 			(
 				"Slugger", // defnName
 				"Red", // factionName
-				Coords.fromXY(1, 0), // orientation
-				Coords.fromXY(5, 3) // pos
+				Coords.fromXY(5, 3), // pos
+				Coords.fromXY(1, 0) // orientation
 			),
 
 			new Mover
 			(
 				"Sniper", // defnName
 				"Red", // factionName
+				Coords.fromXY(3, 3), // pos
 				Coords.fromXY(1, 0), // orientation
-				Coords.fromXY(3, 3) // pos
 			),
 
 			new Mover
 			(
 				"Sprinter", // defnName
 				"Red", // factionName
-				Coords.fromXY(1, 0), // orientation
-				Coords.fromXY(5, 1) // pos
+				Coords.fromXY(5, 1), // pos
+				Coords.fromXY(1, 0) // orientation
 			),
 		];
 
